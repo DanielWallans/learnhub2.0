@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import gsap from 'gsap';
 import { collection, doc, onSnapshot, query, where } from 'firebase/firestore';
-import { ArrowUpRight, Eye, EyeOff, Command } from 'lucide-react';
+import { ArrowUpRight, Eye, EyeOff, Command, Clock, Star } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { useStudent } from '@/context/StudentContext';
@@ -12,6 +12,9 @@ import BibliotecaImg from '@/assets/modules/biblioteca.jpg';
 import FinancasImg from '@/assets/modules/financas.jpg';
 import HabilidadesImg from '@/assets/modules/habilidades.jpg';
 import CarreiraImg from '@/assets/modules/carreira.jpg';
+import TarefasImg from '@/assets/modules/tarefas.jpg';
+import { amanhaIso, hojeIso } from '@/features/tarefas/lib/datas';
+import { categoria } from '@/features/tarefas/lib/constants';
 import { COL } from '@/lib/collections';
 
 const brl = (v) => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -78,6 +81,7 @@ const Dashboard = () => {
   const [livros, setLivros] = useState([]);
   const [habilidades, setHabilidades] = useState([]);
   const [candidaturas, setCandidaturas] = useState([]);
+  const [tarefas, setTarefas] = useState([]);
   const [financas, setFinancas] = useState({ totalBalance: 0, totalSpending: 0, totalSaved: 0 });
   const [mostrarSaldo, setMostrarSaldo] = useState(() => {
     try {
@@ -93,6 +97,7 @@ const Dashboard = () => {
     import('@/features/financas/FinancasPage');
     import('@/features/habilidades/HabilidadesPage');
     import('@/features/carreira/CarreiraPage');
+    import('@/features/tarefas/TarefasPage');
   }, []);
 
   useEffect(() => {
@@ -104,6 +109,9 @@ const Dashboard = () => {
       ),
       onSnapshot(query(collection(db, COL.habilidades), where('userId', '==', uid)), (s) =>
         setHabilidades(s.docs.map((d) => ({ id: d.id, ...d.data() })))
+      ),
+      onSnapshot(query(collection(db, COL.tarefas), where('userId', '==', uid)), (s) =>
+        setTarefas(s.docs.map((d) => ({ id: d.id, ...d.data() })))
       ),
       onSnapshot(query(collection(db, COL.candidaturas), where('userId', '==', uid)), (s) =>
         setCandidaturas(s.docs.map((d) => ({ id: d.id, ...d.data() })))
@@ -168,7 +176,18 @@ const Dashboard = () => {
   const contagem = fases.map((f) => candidaturas.filter((c) => c.fase === f).length);
   const ultimaCandidatura = [...candidaturas].sort((a, b) => (b.dataEnvio || '').localeCompare(a.dataEnvio || ''))[0];
 
+  const diaHoje = hojeIso();
+  const diaAmanha = amanhaIso();
+  const pendentes = tarefas.filter((t) => !t.concluida);
+  const tarefasHoje = pendentes.filter((t) => t.data === diaHoje);
+  const atrasadas = pendentes.filter((t) => t.data && t.data < diaHoje).length;
+  const proximasTarefas = pendentes
+    .filter((t) => t.data === diaHoje || t.data === diaAmanha)
+    .sort((a, b) => a.data.localeCompare(b.data) || (b.importante ? 1 : 0) - (a.importante ? 1 : 0) || (a.hora || '99').localeCompare(b.hora || '99'))
+    .slice(0, 4);
+
   const resumo = [
+    tarefasHoje.length > 0 && `${tarefasHoje.length} ${tarefasHoje.length === 1 ? 'tarefa' : 'tarefas'} para hoje`,
     lendo.length > 0 && `${lendo.length} ${lendo.length === 1 ? 'livro' : 'livros'} em andamento`,
     contagem[2] > 0 && `${contagem[2]} ${contagem[2] === 1 ? 'entrevista' : 'entrevistas'} no radar`,
     habilidades.length > 0 && `${mediaHabilidades}% de domínio médio nas habilidades`
@@ -264,6 +283,34 @@ const Dashboard = () => {
           ) : (
             <p className="text-sm text-ink-300">Nenhuma candidatura ainda.</p>
           )}
+        </ModuleCard>
+
+        <ModuleCard id="tarefas" to="/tarefas" index="05" title="Tarefas" image={TarefasImg} className="md:col-span-2 xl:col-span-4" i={5} onOpen={abrirModulo}>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <p className="font-mono text-sm text-ink-300">
+              <span className="text-2xl text-ink-50">{tarefasHoje.length}</span> para hoje
+              {atrasadas > 0 && <span className="ml-3 text-ink-50">· {atrasadas} atrasada{atrasadas > 1 ? 's' : ''}</span>}
+            </p>
+            {proximasTarefas.length > 0 ? (
+              <ul className="grid gap-x-8 gap-y-2 sm:grid-cols-2 lg:min-w-[560px]">
+                {proximasTarefas.map((t) => {
+                  const Icone = categoria(t.categoria).icone;
+                  return (
+                    <li key={t.id} className="flex min-w-0 items-center gap-2.5 text-sm">
+                      <span className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-ink-400" />
+                      <span className="truncate text-ink-50">{t.titulo}</span>
+                      {t.importante && <Star className="h-3 w-3 shrink-0 fill-lime text-lime" />}
+                      <span className="ml-auto flex shrink-0 items-center gap-1 font-mono text-xs text-ink-400">
+                        {t.data === diaAmanha ? 'amanhã' : t.hora ? <><Clock className="h-3 w-3" /> {t.hora}</> : <Icone className="h-3 w-3" />}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-sm text-ink-300">Nada para hoje nem amanhã. Escreva uma tarefa como "amanhã estudar java às 19h".</p>
+            )}
+          </div>
         </ModuleCard>
       </div>
     </div>

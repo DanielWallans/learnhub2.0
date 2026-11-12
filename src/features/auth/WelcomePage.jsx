@@ -4,17 +4,19 @@ import { motion } from 'motion/react';
 import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import { useGSAP } from '@gsap/react';
-import { ArrowRight, BookOpen, Briefcase, Target, Wallet } from 'lucide-react';
+import { ArrowRight, BookOpen, Briefcase, ListChecks, Target, Wallet } from 'lucide-react';
 import { useStudent } from '@/context/StudentContext';
 import { Logo } from '@/components/brand/Logo';
 import BibliotecaImg from '@/assets/modules/biblioteca.jpg';
 import FinancasImg from '@/assets/modules/financas.jpg';
 import HabilidadesImg from '@/assets/modules/habilidades.jpg';
 import CarreiraImg from '@/assets/modules/carreira.jpg';
+import TarefasImg from '@/assets/modules/tarefas.jpg';
 
 gsap.registerPlugin(SplitText, useGSAP);
 
 const MODULOS = [
+  { to: '/tarefas', nome: 'Tarefas', texto: 'O que fazer e quando', icon: ListChecks, img: TarefasImg },
   { to: '/leitura', nome: 'Biblioteca', texto: 'Livros e anotações', icon: BookOpen, img: BibliotecaImg },
   { to: '/financas', nome: 'Finanças', texto: 'Saldo e gastos', icon: Wallet, img: FinancasImg },
   { to: '/habilidades', nome: 'Habilidades', texto: 'O que você domina', icon: Target, img: HabilidadesImg },
@@ -53,7 +55,7 @@ function BoasVindas() {
           Bem-vindo, {primeiroNome}. Por onde começamos?
         </h1>
 
-        <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {MODULOS.map((m, i) => {
             const Icon = m.icon;
             return (

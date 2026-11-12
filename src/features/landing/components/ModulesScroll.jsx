@@ -3,7 +3,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { Check } from "lucide-react";
-import { CareerWidget, FinanceWidget, HabitsWidget, ReadingWidget } from "@/features/landing/components/mocks";
+import { CareerWidget, FinanceWidget, HabitsWidget, ReadingWidget, TasksWidget } from "@/features/landing/components/mocks";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -35,6 +35,13 @@ const modules = [
     text: "Acompanhe estágios e empregos da inscrição à aprovação, com empresa, modalidade e salário.",
     points: ["Inscrição, prova, entrevista", "Remoto, híbrido ou presencial", "Metas de carreira"],
     Widget: CareerWidget,
+  },
+  {
+    name: "Tarefas",
+    title: "Escreva como fala.",
+    text: 'Digite "amanhã estudar java às 19h" e a tarefa já entra no dia, no horário e na categoria certos.',
+    points: ["Hoje, amanhã e próximos dias", "Semana em uma faixa", "Destaque para o que é importante"],
+    Widget: TasksWidget,
   },
 ];
 
@@ -102,7 +109,7 @@ export function ModulesScroll() {
 
       <div ref={track} className="flex flex-col lg:h-full lg:w-max lg:flex-row lg:items-center">
         <div className="flex flex-col justify-center px-5 py-20 sm:px-8 lg:w-[38vw] lg:py-0 lg:pl-[max(2rem,calc((100vw-72rem)/2+2rem))]">
-          <p className="font-mono text-xs text-ink-400">04 módulos</p>
+          <p className="font-mono text-xs text-ink-400">{String(modules.length).padStart(2, "0")} módulos</p>
           <h2 className="mt-4 max-w-md text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-ink-50 sm:text-5xl">
             Tudo o que pesa no semestre, organizado.
           </h2>

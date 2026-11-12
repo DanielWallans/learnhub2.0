@@ -23,9 +23,10 @@ export function FeedbackProvider({ children }) {
   const dismiss = useCallback((id) => setToasts((list) => list.filter((t) => t.id !== id)), []);
 
   const toast = useCallback(
-    ({ title, description, tone = "info", duration = 4000 }) => {
+    // action: { label, onClick } mostra um botão no aviso (ex.: "Desfazer")
+    ({ title, description, tone = "info", duration = 4000, action }) => {
       const id = ++idRef.current;
-      setToasts((list) => [...list.slice(-3), { id, title, description, tone }]);
+      setToasts((list) => [...list.slice(-3), { id, title, description, tone, action }]);
       setTimeout(() => dismiss(id), duration);
     },
     [dismiss]
@@ -67,6 +68,17 @@ export function FeedbackProvider({ children }) {
                     <p className="text-sm font-medium text-ink-50">{t.title}</p>
                     {t.description && <p className="mt-0.5 text-xs text-ink-400">{t.description}</p>}
                   </div>
+                  {t.action && (
+                    <button
+                      onClick={() => {
+                        dismiss(t.id);
+                        t.action.onClick();
+                      }}
+                      className="-my-1 shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium text-lime transition-colors hover:bg-lime/10"
+                    >
+                      {t.action.label}
+                    </button>
+                  )}
                   <button
                     onClick={() => dismiss(t.id)}
                     className="rounded p-0.5 text-ink-500 transition-colors hover:text-ink-50"

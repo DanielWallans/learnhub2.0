@@ -1,4 +1,4 @@
-import { BookOpen, Briefcase, Flame, Wallet, TrendingUp, Check } from "lucide-react";
+import { BookOpen, Briefcase, Flame, Wallet, TrendingUp, Check, ListChecks, Clock, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Widgets ilustrativos usados na landing. Os valores são de exemplo.
@@ -101,6 +101,39 @@ const stages = [
   { name: "Entrevista", count: 2 },
   { name: "Aprovado", count: 1 },
 ];
+
+const tarefasExemplo = [
+  { titulo: "Estudar Java", hora: "19:00", feita: false, importante: true },
+  { titulo: "Entrevista no Nubank", hora: "14:00", feita: false },
+  { titulo: "Supermercado", hora: "", feita: true },
+];
+
+export function TasksWidget({ className }) {
+  return (
+    <Panel className={className}>
+      <div className="flex items-center justify-between">
+        <PanelLabel icon={ListChecks}>Amanhã</PanelLabel>
+        <span className="font-mono text-xs text-ink-400">1 de 3 feitas</span>
+      </div>
+      <ul className="mt-3 space-y-2.5">
+        {tarefasExemplo.map((t) => (
+          <li key={t.titulo} className="flex items-center gap-2.5 text-sm">
+            <span className={cn("flex h-4 w-4 items-center justify-center rounded-full border-2", t.feita ? "border-lime bg-lime text-ink-950" : "border-ink-500")}>
+              {t.feita && <Check className="h-2.5 w-2.5" strokeWidth={3.5} />}
+            </span>
+            <span className={cn("flex-1", t.feita ? "text-ink-500 line-through" : "text-ink-100")}>{t.titulo}</span>
+            {t.importante && <Star className="h-3 w-3 fill-lime text-lime" />}
+            {t.hora && (
+              <span className="flex items-center gap-1 font-mono text-xs text-ink-400">
+                <Clock className="h-3 w-3" /> {t.hora}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
 
 export function CareerWidget({ className }) {
   return (

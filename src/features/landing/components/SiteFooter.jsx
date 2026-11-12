@@ -27,7 +27,7 @@ export function SiteFooter() {
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-sm text-ink-400">
-            Organização para estudantes: leitura, finanças, hábitos e carreira.
+            Organização para estudantes: tarefas, leitura, finanças, habilidades e carreira.
           </p>
         </div>
         {columns.map((col) => (

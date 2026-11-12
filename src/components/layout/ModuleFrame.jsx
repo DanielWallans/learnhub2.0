@@ -6,6 +6,7 @@ import { SplitText } from "gsap/SplitText";
 import { useGSAP } from "@gsap/react";
 import { ArrowLeft, ArrowRight, CornerDownLeft, RotateCcw } from "lucide-react";
 import { clearCardTransition, peekCardTransition } from "@/components/layout/cardTransition";
+import { TOTAL_MODULOS } from "@/components/layout/nav";
 
 gsap.registerPlugin(SplitText, useGSAP);
 
@@ -131,8 +132,8 @@ function Intro({ id, index, image, title, phrase, cta, stats, onEnter }) {
           >
             <ArrowLeft className="h-4 w-4" /> Painel
           </Link>
-          <span className="font-mono text-xs text-ink-300">
-            <span className="text-lime">{index}</span> / 04
+          <span className="rounded-lg border border-ink-50/15 bg-ink-950/50 px-2.5 py-1.5 font-mono text-xs text-ink-200 backdrop-blur-md">
+            <span className="text-lime">{index}</span> / {TOTAL_MODULOS}
           </span>
         </div>
 

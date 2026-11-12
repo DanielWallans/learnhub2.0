@@ -6,7 +6,7 @@
 
 **Estudos, grana, hábitos e carreira. Num painel só.**
 
-Organização para estudantes: o livro que você está lendo, o saldo do mês, o que você está aprendendo e as vagas em que se inscreveu, sincronizados no computador e no celular.
+Organização para estudantes: as tarefas do dia, o livro que você está lendo, o saldo do mês, o que você está aprendendo e as vagas em que se inscreveu, sincronizados no computador e no celular.
 
 <br />
 
@@ -35,10 +35,11 @@ Organização para estudantes: o livro que você está lendo, o saldo do mês, o
 
 ## Sobre
 
-O LearnHub reúne quatro áreas da vida de estudante em um único painel:
+O LearnHub reúne cinco áreas da vida de estudante em um único painel:
 
 | Módulo | O que você faz |
 |---|---|
+| **Tarefas** | Anota o que precisa fazer escrevendo como fala ("amanhã estudar java às 19h") e acompanha hoje, amanhã e a semana. |
 | **Biblioteca** | Cadastra livros (com busca automática de capa e páginas), marca a página atual, avalia e escreve anotações. |
 | **Finanças** | Registra entradas e saídas, acompanha saldo, gastos e reserva, e vê um gráfico dos últimos 6 meses. |
 | **Habilidades** | Mapeia o que está aprendendo, acompanha o nível de domínio e recebe sugestões de próximo passo. |
@@ -58,9 +59,9 @@ Login com e-mail e senha, cadastro em três etapas e recuperação de senha por 
 
 ### 2. O painel
 
-Depois de entrar, o painel resume os quatro módulos com dados reais: o livro em andamento, o saldo (que pode ser ocultado), o domínio médio das habilidades e a última candidatura.
+Depois de entrar, o painel resume os cinco módulos com dados reais: o livro em andamento, o saldo (que pode ser ocultado), o domínio médio das habilidades, a última candidatura e as tarefas de hoje e amanhã.
 
-<img src="docs/images/painel.jpg" alt="Painel com os quatro módulos" width="100%" />
+<img src="docs/images/painel.jpg" alt="Painel com os cinco módulos" width="100%" />
 
 ### 3. Do card ao módulo
 
@@ -71,6 +72,10 @@ Ao clicar em um card, os outros recuam e a tela do módulo nasce do tamanho e da
 Ao entrar, a foto encolhe e vira o banner do topo do módulo. A animação é a mesma imagem se transformando, não uma troca de tela.
 
 ### 4. Os módulos
+
+<img src="docs/images/modulo-tarefas.jpg" alt="Módulo Tarefas" width="100%" />
+
+<b>Tarefas</b>: entrada rápida com prévia do que foi entendido, faixa da semana, grupos (atrasadas, hoje, amanhã, próximos dias, sem data), destaque de importantes e exclusão com "Desfazer".
 
 <table>
   <tr>
@@ -83,12 +88,15 @@ Ao entrar, a foto encolhe e vira o banner do topo do módulo. A animação é a 
   </tr>
 </table>
 
-### 5. Lançamento rápido
+### 5. Escrever do jeito que se fala
 
-Em Finanças, dá para registrar escrevendo do jeito que se fala. O texto é interpretado por regras (não é IA):
+Em Tarefas e em Finanças, dá para registrar escrevendo uma frase comum. O texto é interpretado por regras (não é IA), e em Tarefas uma prévia mostra o que vai ser criado antes de salvar:
 
 | Você escreve | O LearnHub registra |
 |---|---|
+| `amanhã estudar java às 19h` | Tarefa "Estudar java", amanhã, 19:00, categoria Estudo |
+| `sexta entrevista 14h` | Tarefa "Entrevista", na sexta, 14:00, categoria Carreira |
+| `hoje supermercado` | Tarefa "Supermercado", hoje, categoria Compras |
 | `gastei 32 no almoço` | Saída de R$ 32,00 em "Refeição" |
 | `recebi 800 de bolsa` | Entrada de R$ 800,00 em "Bolsa de estudos" |
 | `guardei 100` | R$ 100,00 do saldo vão para a reserva |
@@ -159,6 +167,7 @@ src/
 │   ├── financas/             #   Finanças (gráfico, lançamento rápido, cartão)
 │   ├── habilidades/          #   Habilidades (radar, mapa, dicas)
 │   ├── carreira/             #   Carreira (etapas, candidaturas, metas)
+│   ├── tarefas/              #   Tarefas (entrada por frase, semana, grupos por dia)
 │   └── conta/                #   perfil e relatório de problemas
 │
 ├── lib/
@@ -236,6 +245,7 @@ erDiagram
     ALUNOS ||--o{ HABILIDADES : userId
     ALUNOS ||--o{ CANDIDATURAS : userId
     ALUNOS ||--o{ CARREIRA_METAS : userId
+    ALUNOS ||--o{ TAREFAS : userId
 
     ALUNOS {
         string uid PK
@@ -282,6 +292,15 @@ erDiagram
         string fase
         string dataEnvio
     }
+    TAREFAS {
+        string userId FK
+        string titulo
+        string data
+        string hora
+        string categoria
+        boolean importante
+        boolean concluida
+    }
     CARREIRA_METAS {
         string userId FK
         string tipo
@@ -301,5 +320,7 @@ As regras em [`firestore.rules`](firestore.rules) garantem que:
 A senha nunca é gravada no Firestore: ela fica só no Firebase Authentication. A matrícula é gerada no navegador, sem consultar outros alunos, o que permite manter a coleção `alunos` fechada.
 
 ## Autor
+
+Foto do módulo Tarefas: relógio do Museu d'Orsay, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Horloge_mus%C3%A9e_d%27Orsay.jpg) (domínio público, CC0).
 
 Feito por **Daniel Wallans** · [github.com/DanielWallans](https://github.com/DanielWallans)

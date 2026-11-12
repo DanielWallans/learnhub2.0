@@ -9,5 +9,6 @@ export const COL = {
   habilidades: 'habilidades', // habilidades e progresso
   candidaturas: 'candidaturas', // processos seletivos
   carreiraMetas: 'carreira_metas', // metas de carreira
+  tarefas: 'tarefas', // tarefas do dia a dia
   bugReports: 'bug-reports', // relatórios enviados pelo app
 };
