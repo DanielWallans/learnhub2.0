@@ -20,7 +20,6 @@ Organização para estudantes: o livro que você está lendo, o saldo do mês, o
 
 <br />
 
-<a href="#como-rodar">Como rodar</a> ·
 <a href="#como-funciona">Como funciona</a> ·
 <a href="#tecnologias">Tecnologias</a> ·
 <a href="#arquitetura">Arquitetura</a> ·
@@ -110,56 +109,6 @@ A navegação vira um dock embaixo da tela, os campos usam 16 px (o iPhone não 
 
 <br />
 
-## Como rodar
-
-### Pré-requisitos
-
-- [Node.js](https://nodejs.org) 18 ou mais novo
-- Um projeto no [Firebase](https://console.firebase.google.com) com **Authentication** (e-mail e senha) e **Cloud Firestore** ativados
-
-### Passo a passo
-
-```bash
-# 1. Clone o repositório
-git clone https://github.com/DanielWallans/learnhub2.0.git
-cd learnhub2.0
-
-# 2. Instale as dependências
-npm install
-
-# 3. Rode em modo de desenvolvimento (abre em http://localhost:3000)
-npm start
-```
-
-### Usando o seu próprio Firebase
-
-1. No console do Firebase, crie um app Web e copie a configuração.
-2. Cole os valores em [`src/lib/firebase.js`](src/lib/firebase.js).
-3. Em **Authentication > Sign-in method**, ative **E-mail/senha**.
-4. Publique as regras de segurança do Firestore (veja [Segurança](#segurança)):
-
-```bash
-npx firebase-tools login
-npx firebase-tools use --add      # escolha o seu projeto
-npx firebase-tools deploy --only firestore:rules
-```
-
-> A configuração web do Firebase não é segredo: ela identifica o projeto, e quem protege os dados são as regras do Firestore.
-
-### Scripts
-
-| Comando | O que faz |
-|---|---|
-| `npm start` | Servidor de desenvolvimento com recarga automática |
-| `npm run build` | Gera a versão de produção otimizada em `build/` |
-| `npm test` | Executa o Jest (ainda não há testes escritos; veja [Próximos passos](#próximos-passos)) |
-
-### Deploy
-
-O projeto está pronto para a [Vercel](https://vercel.com): importe o repositório e mantenha as opções padrão. O [`vercel.json`](vercel.json) já redireciona todas as rotas para o `index.html` (necessário para o React Router).
-
-<br />
-
 ## Tecnologias
 
 | Camada | Tecnologia | Para quê |
@@ -220,16 +169,6 @@ src/
 ├── assets/modules/           # fotos dos módulos (preto e branco, comprimidas)
 └── styles/global.css         # base do Tailwind e ajustes globais
 ```
-
-### Convenções
-
-- **Páginas** terminam em `Page.jsx` e ficam na raiz da pasta do módulo.
-- **Lógica sem interface** (cálculos, chamadas externas, constantes) fica em `lib/` do módulo, separada dos componentes.
-- **Nomes de coleção** nunca são escritos à mão: sempre `COL.leitura`, `COL.candidaturas`, etc.
-- **Feedback** usa `useFeedback()` (toasts e confirmação), nunca `alert()` ou `window.confirm()`.
-- **Paleta fixa** de três cores: tinta (`ink-*`), branco (`ink-50`) e o destaque `lime`.
-
-<br />
 
 ## System design
 
@@ -351,45 +290,15 @@ erDiagram
     }
 ```
 
-### Fluxo de dados nos módulos
-
-1. A página assina as coleções do usuário com `onSnapshot` (`where('userId', '==', uid)`).
-2. Toda escrita vai direto para o Firestore; a tela se atualiza sozinha quando o snapshot chega, sem estado duplicado.
-3. Em Finanças, cada lançamento grava a transação **e** atualiza o resumo (`financas_resumo/{uid}`). Excluir um lançamento desfaz o efeito no saldo, nos gastos e na reserva.
-
 ### Segurança
 
-As regras em [`firestore.rules`](firestore.rules), depois de publicadas no projeto Firebase, garantem que:
+As regras em [`firestore.rules`](firestore.rules) garantem que:
 
 - cada pessoa só lê e escreve os próprios documentos;
 - ninguém consegue criar um registro em nome de outra pessoa nem trocar o dono de um registro existente;
 - relatórios de problema podem ser enviados por quem está logado, mas não lidos pelo app.
 
 A senha nunca é gravada no Firestore: ela fica só no Firebase Authentication. A matrícula é gerada no navegador, sem consultar outros alunos, o que permite manter a coleção `alunos` fechada.
-
-### Desempenho
-
-- **Rotas sob demanda:** cada tela baixa o próprio código só quando é aberta, e o painel pré-carrega os módulos em segundo plano.
-- **3D só depois do texto:** a cena Three.js carrega depois do conteúdo principal.
-- **Imagens leves:** as fotos dos módulos passaram de 12 MB para cerca de 0,9 MB.
-- **Fontes locais:** Geist é servida junto com o app, sem depender do Google Fonts.
-
-### Acessibilidade
-
-- Quem ativa "reduzir movimento" no sistema vê a interface sem as animações grandes.
-- Ícones sempre acompanham texto ou `aria-label`; o gráfico tem uma tabela equivalente para leitores de tela.
-- Alvos de toque de pelo menos 44 px e campos sem zoom automático no iPhone.
-
-<br />
-
-## Próximos passos
-
-- [ ] Migrar de Create React App para Vite
-- [ ] Testes automatizados dos fluxos principais
-- [ ] Busca de conteúdo (livros, vagas, habilidades) no Ctrl+K
-- [ ] Modo offline com sincronização
-
-<br />
 
 ## Autor
 
