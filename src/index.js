@@ -1,8 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
+import '@/styles/global.css';
+import App from '@/app/App';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -10,5 +11,3 @@ root.render(
     <App />
   </React.StrictMode>
 );
-
-

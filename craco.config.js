@@ -1,26 +1,10 @@
 const path = require('path');
 
+// Único ajuste no CRA: o alias "@" aponta para src/ (ex.: import { cn } from '@/lib/utils')
 module.exports = {
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
-    configure: (webpackConfig, { env, paths }) => {
-      // Desabilitar cache completamente em desenvolvimento
-      if (env === 'development') {
-        webpackConfig.cache = false;
-        
-        // Configurar DevServer para não usar cache
-        if (webpackConfig.devServer) {
-          webpackConfig.devServer.headers = {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          };
-        }
-      }
-      
-      return webpackConfig;
-    }
-  }
+  },
 };

@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background-color: #0a0a0b;
+  }
+
+  body {
+    @apply min-h-screen bg-ink-950 font-sans text-ink-50 antialiased;
+  }
+
+  /* Ícone do calendário nativo visível no tema escuro */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+    cursor: pointer;
+  }
+
+  /* Remove as setas dos campos numéricos */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  select option {
+    background-color: #111113;
+    color: #f5f5f7;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #26262d;
+    border: 3px solid #0a0a0b;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #34343c;
+  }
+}
+
+/* Máscaras do SplitText: folga para letras com descendente (g, p, j) */
+.hero-word-mask {
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+.intro-char-mask {
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}

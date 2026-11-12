@@ -1,0 +1,73 @@
+rules_version = '2';
+
+// Regras do Firestore do LearnHub: cada pessoa só lê e escreve os próprios dados.
+// Publicar: npx firebase-tools deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logado() {
+      return request.auth != null;
+    }
+
+    // Documentos cujo id é o próprio uid (perfil, resumo financeiro)
+    function dono(uid) {
+      return logado() && request.auth.uid == uid;
+    }
+
+    // Documentos com campo userId
+    function donoDoRegistro() {
+      return logado() && resource.data.userId == request.auth.uid;
+    }
+
+    function criandoParaSi() {
+      return logado() && request.resource.data.userId == request.auth.uid;
+    }
+
+    function mantemDono() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    // Perfis e resumo financeiro (id = uid)
+    match /alunos/{uid} {
+      allow read, write: if dono(uid);
+    }
+    match /usuarios/{uid} {
+      allow read, write: if dono(uid);
+    }
+    match /financas_resumo/{uid} {
+      allow read, write: if dono(uid);
+    }
+
+    // Registros de cada módulo (campo userId)
+    match /leitura/{id} {
+      allow read, delete: if donoDoRegistro();
+      allow create: if criandoParaSi();
+      allow update: if donoDoRegistro() && mantemDono();
+    }
+    match /financas_transacoes/{id} {
+      allow read, delete: if donoDoRegistro();
+      allow create: if criandoParaSi();
+      allow update: if donoDoRegistro() && mantemDono();
+    }
+    match /habilidades/{id} {
+      allow read, delete: if donoDoRegistro();
+      allow create: if criandoParaSi();
+      allow update: if donoDoRegistro() && mantemDono();
+    }
+    match /candidaturas/{id} {
+      allow read, delete: if donoDoRegistro();
+      allow create: if criandoParaSi();
+      allow update: if donoDoRegistro() && mantemDono();
+    }
+    match /carreira_metas/{id} {
+      allow read, delete: if donoDoRegistro();
+      allow create: if criandoParaSi();
+      allow update: if donoDoRegistro() && mantemDono();
+    }
+
+    // Relatórios de problema: qualquer pessoa logada envia, ninguém lê pelo app
+    match /bug-reports/{id} {
+      allow create: if logado();
+    }
+  }
+}
