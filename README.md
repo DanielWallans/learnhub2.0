@@ -40,7 +40,7 @@ O LearnHub reúne cinco áreas da vida de estudante em um único painel:
 | Módulo | O que você faz |
 |---|---|
 | **Tarefas** | Anota o que precisa fazer escrevendo como fala ("amanhã estudar java às 19h") e acompanha hoje, amanhã e a semana. |
-| **Biblioteca** | Cadastra livros (com busca automática de capa e páginas), marca a página atual, avalia e escreve anotações. |
+| **Biblioteca** | Cadastra livros (capa e páginas automáticas pelo título, ISBN ou link da Amazon), marca a página atual, avalia, escreve anotações e abre o livro nas lojas. |
 | **Finanças** | Registra entradas e saídas, acompanha saldo, gastos e reserva, e vê um gráfico dos últimos 6 meses. |
 | **Habilidades** | Mapeia o que está aprendendo, acompanha o nível de domínio e recebe sugestões de próximo passo. |
 | **Carreira** | Acompanha cada candidatura da inscrição à aprovação e define metas (cursos, certificações, idiomas). |
@@ -131,7 +131,7 @@ A navegação vira um dock embaixo da tela, os campos usam 16 px (o iPhone não 
 | Ícones | **Lucide** | Ícones consistentes (o app não usa emojis) |
 | Fontes | **Geist** e **Geist Mono** | Texto e números, servidas junto com o app |
 | Build | **Create React App 5** + **CRACO 7** | Build e alias `@/` para `src/` |
-| APIs externas | **Google Books** e **Open Library** | Busca de livros, capas e número de páginas |
+| APIs externas | **Google Books**, **Open Library** e imagens da **Amazon** | Busca de livros, capa automática e número de páginas ([como](#capa-automática-dos-livros)) |
 
 <br />
 
@@ -162,7 +162,7 @@ src/
 │   ├── leitura/              #   Biblioteca
 │   │   ├── LeituraPage.jsx
 │   │   ├── components/       #     BookDetail, BookCover, Stars
-│   │   ├── lib/              #     busca (Google Books / Open Library), constantes
+│   │   ├── lib/              #     busca e capa automática (Google Books, Open Library, Amazon)
 │   │   └── data/             #     base local de livros para busca instantânea
 │   ├── financas/             #   Finanças (gráfico, lançamento rápido, cartão)
 │   ├── habilidades/          #   Habilidades (radar, mapa, dicas)
@@ -199,8 +199,9 @@ flowchart LR
     CTX -- "login / sessão" --> AUTH[("Firebase Auth")]
     P -- "onSnapshot (tempo real)<br/>escritas" --> FS[("Cloud Firestore")]
     FS --- RULES["firestore.rules<br/>cada um só acessa o que é seu"]
-    P -- "busca de livros" --> GB["Google Books API"]
+    P -- "busca de livros e capas" --> GB["Google Books API"]
     GB -. "se falhar" .-> OL["Open Library API"]
+    OL -. "ISBN" .-> AMZ["Capas Amazon"]
 ```
 
 ### Fluxo de autenticação
@@ -308,6 +309,37 @@ erDiagram
         boolean concluida
     }
 ```
+
+### Capa automática dos livros
+
+Nenhum livro precisa de imagem enviada. [`encontrarCapa`](src/features/leitura/lib/busca.js) tenta as fontes em ordem e para na primeira imagem válida.
+
+```mermaid
+flowchart TD
+    IN["título · autor · ISBN · link de compra"] --> ISBN{"tem ISBN?<br/>(campo ou link)"}
+    ISBN -- sim --> AMZ["Amazon<br/>images/P/{ISBN-10}"]
+    AMZ -- falhou --> OLI["Open Library<br/>covers/b/isbn/{ISBN}"]
+    ISBN -- não --> GB["Google Books API<br/>intitle + inauthor"]
+    OLI -- falhou --> GB
+    GB -- "429 / sem capa" --> OLS["Open Library API<br/>search.json"]
+    OLS -- "ISBNs (85/65 primeiro)" --> AMZ2["Amazon pelo ISBN"]
+    AMZ2 -- falhou --> OLC["Open Library<br/>covers/b/id"]
+    AMZ & OLI & GB & AMZ2 & OLC -- ok --> CAPA(["capa salva no livro"])
+```
+
+| Entrada | Exemplo | Resultado |
+|---|---|---|
+| Título | `Torto Arado` | Open Library acha o ISBN `6580309318`; capa da edição brasileira vem da Amazon |
+| Link da Amazon | `amazon.com.br/Habitos-Atomicos/dp/8550807567` | ISBN tirado do `/dp/`, título tirado do link, capa direto |
+| Link de outra loja | `...?isbn=9788543102146` | ISBN-13 convertido para ISBN-10, capa direto |
+| ISBN | `978-85-508-0756-0` | Dígito verificador validado, capa direto |
+
+| Detalhe | Como |
+|---|---|
+| Imagem válida | Carregada no navegador (sem CORS); GIF 1×1 da Amazon e PNG 128×170 "image not available" do Google contam como sem capa |
+| Capa quebrada em livro salvo | `BookCover` refaz a busca e grava a capa nova no Firestore |
+| Cota do Google Books | Sem chave a cota é compartilhada e esgota (429); chave opcional em `REACT_APP_GOOGLE_BOOKS_KEY` |
+| Onde comprar | Amazon (`/dp/{ISBN-10}` ou busca), Estante Virtual, Mercado Livre e Google Livros, montados a partir do livro |
 
 ### Segurança
 
