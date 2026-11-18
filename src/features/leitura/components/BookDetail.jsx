@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2, Pencil, X, Plus, Clock, ExternalLink } from 'lucide-react';
+import { Trash2, Pencil, X, Plus, Clock, ExternalLink, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { Badge, Progress } from '@/components/ui/primitives';
 import { statusLeitura, statusTone, calcularProgresso } from '@/features/leitura/lib/constants';
 import { Cover } from '@/features/leitura/components/BookCover';
 import { Stars } from '@/features/leitura/components/Stars';
+import { lojasParaLivro, nomeDaLoja } from '@/features/leitura/lib/busca';
 
-export function BookDetail({ livro, onProgresso, onCapitulo, onStatus, onAvaliar, onSalvarAnotacao, onApagarAnotacao, onEditar, onRemover }) {
+export function BookDetail({ livro, onProgresso, onCapitulo, onStatus, onAvaliar, onSalvarAnotacao, onApagarAnotacao, onEditar, onRemover, onCapaEncontrada }) {
   const [texto, setTexto] = useState('');
   const [capitulo, setCapitulo] = useState('');
   const [pagina, setPagina] = useState('');
   const prog = calcularProgresso(livro);
+  const lojas = livro.tipo && livro.tipo !== 'Livro' && !livro.linkCompra ? [] : lojasParaLivro(livro);
+  const lojaSalva = nomeDaLoja(livro.linkCompra);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -28,7 +31,7 @@ export function BookDetail({ livro, onProgresso, onCapitulo, onStatus, onAvaliar
     <div className="flex flex-col gap-6">
       <div className="flex gap-4">
         <div className="h-36 w-24 shrink-0 overflow-hidden rounded-md shadow-[0_20px_40px_-12px_rgba(0,0,0,0.9)] ring-1 ring-ink-700">
-          <Cover livro={livro} />
+          <Cover livro={livro} onCapaEncontrada={onCapaEncontrada} />
         </div>
         <div className="min-w-0 flex-1">
           <Badge tone={statusTone[livro.status] || 'default'}>{livro.status}</Badge>
@@ -95,6 +98,39 @@ export function BookDetail({ livro, onProgresso, onCapitulo, onStatus, onAvaliar
         </div>
       )}
 
+      {lojas.length > 0 && (
+        <div>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-ink-50">
+            <ShoppingBag className="h-4 w-4 text-ink-400" /> Onde comprar
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {livro.linkCompra && (
+              <a
+                href={livro.linkCompra}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-lime px-3 text-xs font-medium text-ink-950 transition-colors hover:bg-[#D4FF4A] [@media(pointer:coarse)]:h-10"
+              >
+                <ExternalLink className="h-3.5 w-3.5" /> {lojaSalva ? `Abrir na ${lojaSalva}` : 'Abrir meu link'}
+              </a>
+            )}
+            {lojas
+              .filter((l) => !livro.linkCompra || l.nome !== lojaSalva)
+              .map((l) => (
+                <a
+                  key={l.nome}
+                  href={l.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-md border border-ink-700 px-3 text-xs text-ink-100 transition-colors hover:border-ink-500 hover:bg-ink-850 [@media(pointer:coarse)]:h-10"
+                >
+                  {l.nome} <ExternalLink className="h-3 w-3 text-ink-500" />
+                </a>
+              ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <h3 className="mb-3 text-sm font-medium text-ink-50">Anotações e resumos</h3>
         <form onSubmit={submit} className="flex flex-col gap-2">
@@ -156,11 +192,6 @@ export function BookDetail({ livro, onProgresso, onCapitulo, onStatus, onAvaliar
         <Button variant="outline" size="sm" onClick={() => onEditar(livro)}>
           <Pencil /> Editar
         </Button>
-        {livro.linkCompra && (
-          <a href={livro.linkCompra} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-md border border-ink-700 px-3 text-xs text-ink-100 transition-colors hover:border-ink-500">
-            <ExternalLink className="h-3.5 w-3.5" /> Abrir link
-          </a>
-        )}
         <Button variant="danger" size="sm" className="ml-auto" onClick={() => onRemover(livro.id)}>
           <Trash2 /> Remover
         </Button>

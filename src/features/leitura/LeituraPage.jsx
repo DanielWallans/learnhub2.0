@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
@@ -16,7 +16,15 @@ import { QuickDelete } from '@/components/ui/quick-delete';
 import BibliotecaImg from '@/assets/modules/biblioteca.jpg';
 import { COL } from '@/lib/collections';
 import { LIVRO_VAZIO, categorias, tipos, statusLeitura, statusTone, calcularProgresso } from '@/features/leitura/lib/constants';
-import { buscarCapaPorTitulo, buscarLivros } from '@/features/leitura/lib/busca';
+import {
+  buscarLivros,
+  encontrarCapa,
+  isbnDoLink,
+  isbnValido,
+  nomeDaLoja,
+  tituloDoLink,
+  verificarImagem
+} from '@/features/leitura/lib/busca';
 import { Cover } from '@/features/leitura/components/BookCover';
 import { Stars } from '@/features/leitura/components/Stars';
 import { BookDetail } from '@/features/leitura/components/BookDetail';
@@ -100,6 +108,44 @@ const Leitura = () => {
     });
   };
 
+  // Capa achada automaticamente para um livro já salvo (ex.: link antigo quebrado): grava no livro
+  const capasSalvas = useRef(new Set());
+  const salvarCapaEncontrada = (livro, capa) => {
+    if (!livro.id || capasSalvas.current.has(livro.id)) return;
+    capasSalvas.current.add(livro.id);
+    atualizarLivroFirebase(livro.id, { capa }).catch(() => capasSalvas.current.delete(livro.id));
+  };
+
+  // Ao colar um link da Amazon (ou de outra loja com ISBN), preenche título e capa
+  const [buscandoCapa, setBuscandoCapa] = useState(false);
+  const preencherPeloLink = async (link) => {
+    if (!link || !/^https?:\/\//i.test(link)) return;
+    const titulo = novoLivro.titulo || tituloDoLink(link);
+    const isbn = novoLivro.isbn || isbnDoLink(link) || '';
+    setNovoLivro((prev) => ({ ...prev, titulo: prev.titulo || titulo, isbn: prev.isbn || isbn }));
+    if (novoLivro.capa) return;
+    setBuscandoCapa(true);
+    const achado = await encontrarCapa({ titulo, autor: novoLivro.autor, isbn, linkCompra: link });
+    setBuscandoCapa(false);
+    if (achado.capa) setNovoLivro((prev) => ({ ...prev, capa: prev.capa || achado.capa, isbn: prev.isbn || achado.isbn || '' }));
+  };
+
+  const buscarCapaAgora = async () => {
+    setBuscandoCapa(true);
+    const achado = await encontrarCapa({
+      titulo: novoLivro.titulo,
+      autor: novoLivro.autor,
+      isbn: novoLivro.isbn,
+      linkCompra: novoLivro.linkCompra
+    });
+    setBuscandoCapa(false);
+    if (achado.capa) {
+      setNovoLivro((prev) => ({ ...prev, capa: achado.capa, isbn: prev.isbn || achado.isbn || '' }));
+    } else {
+      toast({ title: 'Capa não encontrada', description: 'Confira o título, informe o ISBN ou envie uma imagem.', tone: 'error' });
+    }
+  };
+
   const cancelarEdicao = () => {
     setModoEdicao(false);
     setLivroEditando(null);
@@ -117,22 +163,28 @@ const Leitura = () => {
 
     setSalvando(true);
     try {
-      let capaFinal = novoLivro.capa || '';
+      let capaFinal = (novoLivro.capa || '').trim();
+      let linkCompra = (novoLivro.linkCompra || '').trim();
+      let isbn = isbnValido(novoLivro.isbn) || '';
 
-      // Sem capa (ou com link que não é imagem): tenta achar pelo título
-      const isUrlBase64 = capaFinal.startsWith('data:image/');
-      const isDirectImageLink = capaFinal.match(/\.(jpeg|jpg|gif|png|webp)/i) ||
-        capaFinal.includes('google.com') ||
-        capaFinal.includes('openlibrary.org') ||
-        capaFinal.includes('googleapis.com');
+      // Link de loja colado no campo da capa: vira o link de compra
+      if (capaFinal && !capaFinal.startsWith('data:') && nomeDaLoja(capaFinal) && !/\.(jpe?g|png|gif|webp)(\?|$)/i.test(capaFinal)) {
+        if (!linkCompra) linkCompra = capaFinal;
+        capaFinal = '';
+      }
 
-      if (!capaFinal || (!isUrlBase64 && !isDirectImageLink)) {
-        capaFinal = (await buscarCapaPorTitulo(novoLivro.titulo)) || '';
+      // Sem capa, ou com uma que não carrega: procura pelo ISBN, link de compra ou título
+      if (!capaFinal || !(await verificarImagem(capaFinal))) {
+        const achado = await encontrarCapa({ titulo: novoLivro.titulo, autor: novoLivro.autor, isbn, linkCompra });
+        capaFinal = achado.capa || '';
+        isbn = isbn || achado.isbn || '';
       }
 
       const livroData = {
         ...novoLivro,
         capa: capaFinal,
+        linkCompra,
+        isbn,
         paginasTotal: parseInt(novoLivro.paginasTotal) || 0,
         paginasLidas: parseInt(novoLivro.paginasLidas) || 0,
         avaliacao: parseInt(novoLivro.avaliacao) || 0,
@@ -202,7 +254,8 @@ const Leitura = () => {
       descricao: livroInfo.descricao || '',
       paginasTotal: livroInfo.paginasTotal || '',
       dataInicio: new Date().toISOString().split('T')[0],
-      capa: livroInfo.capa
+      capa: livroInfo.capa || '',
+      isbn: livroInfo.isbn || ''
     });
     setModoEdicao(false);
     setMostrarFormulario(true);
@@ -335,7 +388,8 @@ const Leitura = () => {
     onSalvarAnotacao: salvarAnotacao,
     onApagarAnotacao: deletarAnotacao,
     onEditar: iniciarEdicao,
-    onRemover: removerLivro
+    onRemover: removerLivro,
+    onCapaEncontrada: salvarCapaEncontrada
   };
 
   const setCampo = (campo) => (e) => setNovoLivro({ ...novoLivro, [campo]: e.target.value });
@@ -520,7 +574,7 @@ const Leitura = () => {
                             ativo ? 'ring-2 ring-lime' : 'ring-ink-800 group-hover:ring-ink-600'
                           )}
                         >
-                          <Cover livro={livro} />
+                          <Cover livro={livro} onCapaEncontrada={salvarCapaEncontrada} />
                           <div className="absolute inset-x-0 bottom-0 h-1 bg-ink-950/70">
                             <div className="h-full bg-lime" style={{ width: `${prog}%` }} />
                           </div>
@@ -563,7 +617,7 @@ const Leitura = () => {
                       className={cn('flex min-w-0 flex-1 items-center gap-4 px-2 py-3 text-left transition-colors', ativo ? 'bg-ink-900' : 'hover:bg-ink-900/60')}
                     >
                       <div className="h-14 w-10 shrink-0 overflow-hidden rounded-sm">
-                        <Cover livro={livro} />
+                        <Cover livro={livro} onCapaEncontrada={salvarCapaEncontrada} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm text-ink-50">{livro.titulo}</p>
@@ -611,7 +665,7 @@ const Leitura = () => {
         open={mostrarFormulario}
         onClose={fecharFormulario}
         title={modoEdicao ? 'Editar livro' : 'Adicionar livro'}
-        description={modoEdicao ? undefined : 'Deixe a capa vazia que a gente tenta encontrar pelo título.'}
+        description={modoEdicao ? undefined : 'A capa vem sozinha pelo título, ISBN ou link de compra.'}
         size="lg"
         footer={
           <>
@@ -631,12 +685,40 @@ const Leitura = () => {
             </Select>
           </Field>
 
-          <Field label="Capa" className="sm:col-span-2" hint="Cole o link de uma imagem ou envie um arquivo de até 1,5 MB.">
-            <div className="flex gap-2">
+          <Field
+            label="Link de compra"
+            className="sm:col-span-2"
+            hint="Cole o link da Amazon, Estante Virtual ou outra loja: a gente preenche o título e a capa."
+          >
+            <Input
+              type="url"
+              placeholder="https://www.amazon.com.br/..."
+              value={novoLivro.linkCompra}
+              onChange={setCampo('linkCompra')}
+              onBlur={(e) => preencherPeloLink(e.target.value.trim())}
+              onPaste={(e) => {
+                const colado = e.clipboardData.getData('text').trim();
+                if (colado) setTimeout(() => preencherPeloLink(colado), 0);
+              }}
+            />
+          </Field>
+
+          <Field label="Capa" className="sm:col-span-2" hint="Automática pelo título, ISBN ou link. Se preferir, cole o link de uma imagem ou envie um arquivo de até 1,5 MB.">
+            <div className="flex flex-wrap gap-2 sm:flex-nowrap">
               {novoLivro.capa && (
-                <img src={novoLivro.capa} alt="Prévia da capa" className="h-10 w-7 shrink-0 rounded-sm object-cover ring-1 ring-ink-700" />
+                <img src={novoLivro.capa} alt="Prévia da capa" referrerPolicy="no-referrer" className="h-10 w-7 shrink-0 rounded-sm object-cover ring-1 ring-ink-700" />
               )}
-              <Input className="flex-1" placeholder="https://..." value={novoLivro.capa.startsWith('data:') ? 'Imagem enviada' : novoLivro.capa} onChange={setCampo('capa')} />
+              <Input className="min-w-0 flex-1" placeholder="Vazio = busca automática" value={novoLivro.capa.startsWith('data:') ? 'Imagem enviada' : novoLivro.capa} onChange={setCampo('capa')} />
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 shrink-0"
+                onClick={buscarCapaAgora}
+                loading={buscandoCapa}
+                disabled={!novoLivro.titulo && !novoLivro.isbn && !novoLivro.linkCompra}
+              >
+                <Search /> Buscar capa
+              </Button>
               <label className="inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-ink-700 px-3 text-sm text-ink-100 transition-colors hover:border-ink-500">
                 <Upload className="h-4 w-4" /> Enviar
                 <input type="file" accept="image/*" onChange={handleUploadImagemCapa} className="hidden" />
@@ -675,7 +757,7 @@ const Leitura = () => {
               <Stars value={novoLivro.avaliacao || 0} onChange={(n) => setNovoLivro({ ...novoLivro, avaliacao: n })} size="h-5 w-5" />
             </div>
           </Field>
-          <TextField label="Link de compra ou download" type="url" placeholder="https://..." value={novoLivro.linkCompra} onChange={setCampo('linkCompra')} />
+          <TextField label="ISBN (opcional)" inputMode="numeric" placeholder="978..." value={novoLivro.isbn || ''} onChange={setCampo('isbn')} />
         </form>
       </Dialog>
     </ModuleFrame>

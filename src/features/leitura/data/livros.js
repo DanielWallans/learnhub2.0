@@ -11,7 +11,8 @@ export const MOCK_LIVROS_DB = [
   {
     titulo: "Hábitos Atômicos",
     autor: "James Clear",
-    capa: "https://books.google.com/books/content?id=j5dVDwAAQBAJ&printsec=frontcover&img=1&zoom=1",
+    capa: "https://images-na.ssl-images-amazon.com/images/P/8550807567.01.LZZZZZZZ.jpg",
+    isbn: "8550807567",
     paginasTotal: 320,
     categoria: "Autoajuda",
     descricao: "Um guia definitivo para quebrar maus hábitos e criar bons hábitos em quatro passos simples."
@@ -27,7 +28,8 @@ export const MOCK_LIVROS_DB = [
   {
     titulo: "O Poder do Hábito",
     autor: "Charles Duhigg",
-    capa: "https://books.google.com/books/content?id=8L1aDwAAQBAJ&printsec=frontcover&img=1&zoom=1",
+    capa: "https://images-na.ssl-images-amazon.com/images/P/8539004119.01.LZZZZZZZ.jpg",
+    isbn: "8539004119",
     paginasTotal: 408,
     categoria: "Autoajuda",
     descricao: "Por que fazemos o que fazemos na vida e nos negócios. Entenda o loop do hábito."
@@ -35,7 +37,8 @@ export const MOCK_LIVROS_DB = [
   {
     titulo: "Pai Rico, Pai Pobre",
     autor: "Robert T. Kiyosaki",
-    capa: "https://books.google.com/books/content?id=019dDwAAQBAJ&printsec=frontcover&img=1&zoom=1",
+    capa: "https://images-na.ssl-images-amazon.com/images/P/8550801488.01.LZZZZZZZ.jpg",
+    isbn: "8550801488",
     paginasTotal: 336,
     categoria: "Negócios",
     descricao: "O que os ricos ensinam a seus filhos sobre dinheiro que as classes média e baixa não ensinam."
@@ -43,7 +46,8 @@ export const MOCK_LIVROS_DB = [
   {
     titulo: "Rápido e Devagar: Duas Formas de Pensar",
     autor: "Daniel Kahneman",
-    capa: "https://books.google.com/books/content?id=K82CDwAAQBAJ&printsec=frontcover&img=1&zoom=1",
+    capa: "https://images-na.ssl-images-amazon.com/images/P/8539004011.01.LZZZZZZZ.jpg",
+    isbn: "8539004011",
     paginasTotal: 608,
     categoria: "Psicologia",
     descricao: "Duas formas de pensar: uma rápida, intuitiva e emocional; outra devagar, deliberativa e lógica."
@@ -51,7 +55,8 @@ export const MOCK_LIVROS_DB = [
   {
     titulo: "Os Segredos da Mente Milionária",
     autor: "T. Harv Eker",
-    capa: "https://books.google.com/books/content?id=t2lVDwAAQBAJ&printsec=frontcover&img=1&zoom=1",
+    capa: "https://images-na.ssl-images-amazon.com/images/P/8575422391.01.LZZZZZZZ.jpg",
+    isbn: "8575422391",
     paginasTotal: 176,
     categoria: "Negócios",
     descricao: "Aprenda a substituir uma mentalidade destrutiva pelos arquivos de riqueza que distinguem os ricos."
@@ -59,7 +64,8 @@ export const MOCK_LIVROS_DB = [
   {
     titulo: "Essencialismo",
     autor: "Greg McKeown",
-    capa: "https://books.google.com/books/content?id=5C0wDwAAQBAJ&printsec=frontcover&img=1&zoom=1",
+    capa: "https://images-na.ssl-images-amazon.com/images/P/8543102146.01.LZZZZZZZ.jpg",
+    isbn: "8543102146",
     paginasTotal: 272,
     categoria: "Autoajuda",
     descricao: "A busca disciplinada por menos. Aprenda a focar no que realmente importa e eliminar todo o resto."
@@ -67,7 +73,8 @@ export const MOCK_LIVROS_DB = [
   {
     titulo: "Quem Pensa Enriquece",
     autor: "Napoleon Hill",
-    capa: "https://books.google.com/books/content?id=YpE_DwAAQBAJ&printsec=frontcover&img=1&zoom=1",
+    capa: "https://images-na.ssl-images-amazon.com/images/P/6587885004.01.LZZZZZZZ.jpg",
+    isbn: "6587885004",
     paginasTotal: 292,
     categoria: "Negócios",
     descricao: "O maior clássico sobre o sucesso financeiro e pessoal. Baseado na filosofia de conquistas de Andrew Carnegie."
@@ -83,7 +90,8 @@ export const MOCK_LIVROS_DB = [
   {
     titulo: "Mindset",
     autor: "Carol S. Dweck",
-    capa: "https://books.google.com/books/content?id=t2RVDwAAQBAJ&printsec=frontcover&img=1&zoom=1",
+    capa: "https://images-na.ssl-images-amazon.com/images/P/8547000240.01.LZZZZZZZ.jpg",
+    isbn: "8547000240",
     paginasTotal: 312,
     categoria: "Psicologia",
     descricao: "A nova psicologia do sucesso. Carol Dweck explica como a nossa atitude mental determina o sucesso."
@@ -91,7 +99,8 @@ export const MOCK_LIVROS_DB = [
   {
     titulo: "Comece Pelo Porquê",
     autor: "Simon Sinek",
-    capa: "https://books.google.com/books/content?id=v-0wDwAAQBAJ&printsec=frontcover&img=1&zoom=1",
+    capa: "https://images-na.ssl-images-amazon.com/images/P/854310663X.01.LZZZZZZZ.jpg",
+    isbn: "854310663X",
     paginasTotal: 256,
     categoria: "Negócios",
     descricao: "Simon Sinek mostra que líderes inspiradores começam pelo porquê."
@@ -99,7 +108,8 @@ export const MOCK_LIVROS_DB = [
   {
     titulo: "O Milagre da Manhã",
     autor: "Hal Elrod",
-    capa: "https://books.google.com/books/content?id=DndwDwAAQBAJ&printsec=frontcover&img=1&zoom=1",
+    capa: "https://images-na.ssl-images-amazon.com/images/P/8576849941.01.LZZZZZZZ.jpg",
+    isbn: "8576849941",
     paginasTotal: 196,
     categoria: "Autoajuda",
     descricao: "O segredo para transformar sua vida antes das 8 horas da manhã."

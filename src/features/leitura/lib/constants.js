@@ -13,6 +13,7 @@ export const LIVRO_VAZIO = {
   dataInicio: '',
   dataTermino: '',
   linkCompra: '',
+  isbn: '',
   capa: '',
   favorito: false,
   anotacoes: []
