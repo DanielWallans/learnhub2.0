@@ -16,6 +16,7 @@ import TarefasImg from '@/assets/modules/tarefas.jpg';
 import { amanhaIso, hojeIso } from '@/features/tarefas/lib/datas';
 import { categoria } from '@/features/tarefas/lib/constants';
 import { COL } from '@/lib/collections';
+import { useMostrarValores, VALOR_OCULTO } from '@/features/financas/lib/useMostrarValores';
 
 const brl = (v) => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -83,13 +84,7 @@ const Dashboard = () => {
   const [candidaturas, setCandidaturas] = useState([]);
   const [tarefas, setTarefas] = useState([]);
   const [financas, setFinancas] = useState({ totalBalance: 0, totalSpending: 0, totalSaved: 0 });
-  const [mostrarSaldo, setMostrarSaldo] = useState(() => {
-    try {
-      return localStorage.getItem('learnhub_mostrar_saldo') !== 'false';
-    } catch (e) {
-      return true;
-    }
-  });
+  const [mostrarSaldo, toggleSaldo] = useMostrarValores();
 
   // Baixa o código dos módulos com antecedência para a transição não parar num carregamento
   useEffect(() => {
@@ -145,19 +140,6 @@ const Dashboard = () => {
       .to(el, { scale: 1, duration: 0.15, ease: 'power2.inOut' });
   };
 
-  const toggleSaldo = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setMostrarSaldo((v) => {
-      try {
-        localStorage.setItem('learnhub_mostrar_saldo', String(!v));
-      } catch (err) {
-        // Preferência só não fica salva
-      }
-      return !v;
-    });
-  };
-
   const lendo = livros.filter((l) => l.status === 'Lendo');
   const livroAtivo = lendo[0] || null;
   const progressoLivro = livroAtivo?.paginasTotal ? Math.round(((livroAtivo.paginasLidas || 0) / livroAtivo.paginasTotal) * 100) : 0;
@@ -194,7 +176,7 @@ const Dashboard = () => {
   ].filter(Boolean);
 
   const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
-  const oculto = 'R$ ••••';
+  const oculto = VALOR_OCULTO;
 
   return (
     <div ref={root} className="mx-auto max-w-[1400px] px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-10">

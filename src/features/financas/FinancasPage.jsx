@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowDownRight, ArrowUpRight, Wallet, Plus, Minus, PiggyBank, Pencil, CreditCard, RotateCcw, Send, Zap } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Wallet, Plus, Minus, PiggyBank, Pencil, CreditCard, RotateCcw, Send, Zap, Eye, EyeOff } from 'lucide-react';
 import { collection, query, where, onSnapshot, doc, addDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
@@ -18,11 +18,15 @@ import { RESUMO_INICIAL, CARD_STYLES, cardStyle, MESES, brl, getTxIcon } from '@
 import { AnimatedMoney } from '@/features/financas/components/AnimatedMoney';
 import { processarLancamento } from '@/features/financas/lib/lancamento';
 import { CashflowChart } from '@/features/financas/components/CashflowChart';
+import { useMostrarValores, VALOR_OCULTO } from '@/features/financas/lib/useMostrarValores';
 
 export default function ModuloFinancas() {
   const { user } = useStudent();
   const { toast, confirm } = useFeedback();
 
+  const [mostrarValores, alternarValores] = useMostrarValores();
+  const oculto = !mostrarValores;
+  const exibir = (v) => (oculto ? VALOR_OCULTO : brl(v));
   const [resumo, setResumo] = useState(RESUMO_INICIAL);
   const [transacoes, setTransacoes] = useState([]);
   const [filtroTx, setFiltroTx] = useState('todas');
@@ -286,8 +290,8 @@ export default function ModuloFinancas() {
       phrase="Quanto entrou, quanto saiu e quanto ficou guardado. Sem planilha."
       cta="Abrir minhas finanças"
       stats={[
-        { label: 'Saldo', value: brl(totalBalance) },
-        { label: 'Guardado', value: brl(totalSaved) },
+        { label: 'Saldo', value: exibir(totalBalance) },
+        { label: 'Guardado', value: exibir(totalSaved) },
         { label: 'Lançamentos', value: transacoes.length }
       ]}
       actions={
@@ -299,34 +303,46 @@ export default function ModuloFinancas() {
     >
       {/* Saldos: números grandes, sem caixas */}
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-[1.4fr_1fr_1fr] sm:items-end">
-        <button onClick={abrirSaldos} className="group text-left">
+        <div>
           <span className="flex items-center gap-2 text-sm text-ink-400">
             Saldo principal
-            <Pencil className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100 [@media(hover:none)]:opacity-60" />
+            <button
+              onClick={alternarValores}
+              className="-m-2 rounded p-2 text-ink-400 transition-colors hover:text-ink-50 [@media(pointer:coarse)]:-m-1"
+              aria-label={mostrarValores ? 'Ocultar valores' : 'Mostrar valores'}
+              aria-pressed={!mostrarValores}
+              title={mostrarValores ? 'Ocultar valores' : 'Mostrar valores'}
+            >
+              {mostrarValores ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
           </span>
-          <AnimatedMoney
-            value={totalBalance}
-            className="mt-2 block font-mono text-5xl tracking-[-0.04em] text-ink-50 transition-colors group-hover:text-lime sm:text-6xl"
-          />
-        </button>
+          <button onClick={abrirSaldos} className="group flex items-end gap-2 text-left" aria-label="Editar saldos">
+            <AnimatedMoney
+              value={totalBalance}
+              oculto={oculto}
+              className="mt-2 block font-mono text-5xl tracking-[-0.04em] text-ink-50 transition-colors group-hover:text-lime sm:text-6xl"
+            />
+            <Pencil className="mb-2 h-3.5 w-3.5 text-ink-500 opacity-0 transition-opacity group-hover:opacity-100 [@media(hover:none)]:opacity-60" />
+          </button>
+        </div>
         <div className="border-l border-ink-800 pl-5">
           <span className="flex items-center gap-1.5 text-sm text-ink-400">
             <ArrowDownRight className="h-3.5 w-3.5" /> Total gasto
           </span>
-          <AnimatedMoney value={totalSpending} className="mt-2 block font-mono text-2xl tracking-tight text-ink-100" />
+          <AnimatedMoney value={totalSpending} oculto={oculto} className="mt-2 block font-mono text-2xl tracking-tight text-ink-100" />
         </div>
         <div className="border-l border-ink-800 pl-5">
           <span className="flex items-center gap-1.5 text-sm text-ink-400">
             <PiggyBank className="h-3.5 w-3.5" /> Reserva
           </span>
-          <AnimatedMoney value={totalSaved} className="mt-2 block font-mono text-2xl tracking-tight text-lime" />
+          <AnimatedMoney value={totalSaved} oculto={oculto} className="mt-2 block font-mono text-2xl tracking-tight text-lime" />
         </div>
       </div>
 
       <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-x-12 gap-y-12 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         {/* Gráfico */}
         <Section title="Entradas e saídas" description="Últimos 6 meses">
-          <CashflowChart data={fluxoMensal} />
+          <CashflowChart data={fluxoMensal} oculto={oculto} />
         </Section>
 
         {/* Cartão */}
@@ -348,7 +364,7 @@ export default function ModuloFinancas() {
               <span className="font-mono text-sm font-semibold italic">{resumo.cardBrand}</span>
             </div>
             <div>
-              <AnimatedMoney value={cardBalance} className="block font-mono text-2xl tracking-tight" />
+              <AnimatedMoney value={cardBalance} oculto={oculto} className="block font-mono text-2xl tracking-tight" />
               <div className="mt-2 flex justify-between font-mono text-xs opacity-70">
                 <span>{resumo.cardNumber}</span>
                 <span>{resumo.cardExpiration}</span>
@@ -416,7 +432,7 @@ export default function ModuloFinancas() {
                         <p className="text-xs text-ink-500">{tx.categoria} · {tx.data}</p>
                       </div>
                       <span className={cn('font-mono text-sm tabular-nums', entrada ? 'text-lime' : 'text-ink-200')}>
-                        {entrada ? '+' : '−'} {brl(Math.abs(tx.valor))}
+                        {entrada ? '+' : '−'} {exibir(Math.abs(tx.valor))}
                       </span>
                       <QuickDelete label={`Excluir ${tx.nome}`} onClick={() => excluirTransacao(tx)} className="shrink-0" />
                     </motion.li>

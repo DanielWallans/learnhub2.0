@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
-import { brl } from '@/features/financas/lib/constants';
+import { brl as formatar } from '@/features/financas/lib/constants';
+import { VALOR_OCULTO } from '@/features/financas/lib/useMostrarValores';
 
 // Barras de entradas x saídas dos últimos 6 meses
-export function CashflowChart({ data }) {
+export function CashflowChart({ data, oculto = false }) {
+  const brl = (v) => (oculto ? VALOR_OCULTO : formatar(v));
   const [hover, setHover] = useState(null);
   const max = Math.max(...data.flatMap((d) => [d.entradas, d.saidas]), 1);
   const current = data[data.length - 1];
