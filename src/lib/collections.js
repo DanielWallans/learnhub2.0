@@ -10,5 +10,6 @@ export const COL = {
   candidaturas: 'candidaturas', // processos seletivos
   carreiraMetas: 'carreira_metas', // metas de carreira
   tarefas: 'tarefas', // tarefas do dia a dia
+  listas: 'listas', // listas de compras (mercado, farmácia...)
   bugReports: 'bug-reports', // relatórios enviados pelo app
 };

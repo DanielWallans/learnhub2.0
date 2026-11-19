@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
 import { addDoc, collection, deleteDoc, doc, onSnapshot, query, setDoc, updateDoc, where } from 'firebase/firestore';
-import { ArrowUp, CalendarCheck, ChevronDown, Clock, ListChecks, Plus, SlidersHorizontal } from 'lucide-react';
+import { ArrowUp, CalendarCheck, ChevronDown, Clock, ListChecks, Plus, ShoppingCart, SlidersHorizontal } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { db } from '@/lib/firebase';
 import { COL } from '@/lib/collections';
 import { cn } from '@/lib/utils';
@@ -9,17 +10,20 @@ import { useStudent } from '@/context/StudentContext';
 import { ModuleFrame } from '@/components/layout/ModuleFrame';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
-import { EmptyState, StatRow } from '@/components/ui/primitives';
+import { EmptyState, Segmented, StatRow } from '@/components/ui/primitives';
 import { useFeedback } from '@/components/ui/feedback';
 import { TaskItem } from '@/features/tarefas/components/TaskItem';
 import { TaskForm } from '@/features/tarefas/components/TaskForm';
 import { WeekStrip } from '@/features/tarefas/components/WeekStrip';
+import { ShoppingLists } from '@/features/tarefas/components/ShoppingLists';
+import { listaDaTarefa, tipoLista, tipoPeloNome } from '@/features/tarefas/lib/listas';
 import { TAREFA_VAZIA, categoria } from '@/features/tarefas/lib/constants';
 import { amanhaIso, dataPorExtenso, hojeIso, rotuloData } from '@/features/tarefas/lib/datas';
 import { interpretarTarefa } from '@/features/tarefas/lib/interpretar';
 import TarefasImg from '@/assets/modules/tarefas.jpg';
 
 const EXEMPLOS = ['amanhã estudar java às 19h', 'sexta entrevista 14h', 'hoje supermercado'];
+
 
 // Importantes primeiro, depois por horário (sem horário por último) e ordem de criação
 const ordenar = (a, b) =>
@@ -57,6 +61,35 @@ export default function TarefasPage() {
   const [diaFiltro, setDiaFiltro] = useState(null);
   const [verConcluidas, setVerConcluidas] = useState(false);
   const [dialogo, setDialogo] = useState(null); // { modo: 'nova' | 'editar', dados }
+  const [listas, setListas] = useState([]);
+  const [carregandoListas, setCarregandoListas] = useState(true);
+
+  // Aba e lista aberta ficam no endereço (?aba=listas&lista=id): o voltar do navegador e o Ctrl+K funcionam
+  const [params, setParams] = useSearchParams();
+  const aba = params.get('aba') === 'listas' ? 'listas' : 'tarefas';
+  const listaAtivaId = params.get('lista');
+  const irPara = (novaAba, listaId) => {
+    const p = {};
+    if (novaAba === 'listas') p.aba = 'listas';
+    if (novaAba === 'listas' && listaId) p.lista = listaId;
+    setParams(p, { replace: novaAba === aba });
+  };
+
+  useEffect(() => {
+    if (!user) return undefined;
+    return onSnapshot(
+      query(collection(db, COL.listas), where('userId', '==', user.uid)),
+      (snap) => {
+        setListas(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        setCarregandoListas(false);
+      },
+      (err) => {
+        console.error('Erro ao carregar listas:', err);
+        setCarregandoListas(false);
+        toast({ title: 'Não foi possível abrir as listas', description: 'Confira as regras do Firestore (coleção listas).', tone: 'error' });
+      }
+    );
+  }, [user]);
 
   useEffect(() => {
     if (!user) return undefined;
@@ -150,6 +183,26 @@ export default function TarefasPage() {
   };
 
   const acoes = {
+    listaDe: (t) => {
+      if (t.categoria !== 'Compras') return null;
+      const lista = listaDaTarefa(t, listas);
+      if (lista) return lista;
+      const tipo = tipoPeloNome(t.titulo);
+      return tipo === 'outra' || carregandoListas ? null : { novo: tipo };
+    },
+    onAbrirLista: async (lista) => {
+      if (!lista.novo) return irPara('listas', lista.id);
+      const ref = await addDoc(collection(db, COL.listas), {
+        userId: user.uid,
+        nome: tipoLista(lista.novo).nome,
+        tipo: lista.novo,
+        itens: [],
+        frequentes: {},
+        createdAt: Date.now(),
+        atualizadoEm: Date.now(),
+      });
+      irPara('listas', ref.id);
+    },
     onToggle: (t) =>
       updateDoc(doc(db, COL.tarefas, t.id), { concluida: !t.concluida, concluidaEm: t.concluida ? null : Date.now() }),
     onImportante: (t) => updateDoc(doc(db, COL.tarefas, t.id), { importante: !t.importante }),
@@ -185,165 +238,190 @@ export default function TarefasPage() {
         { label: 'Feitas na semana', value: feitasSemana },
       ]}
       actions={
-        <Button onClick={() => setDialogo({ modo: 'nova', dados: { ...TAREFA_VAZIA, data: diaFiltro || '' } })}>
-          <Plus /> Nova tarefa
-        </Button>
+        aba === 'tarefas' && (
+          <Button onClick={() => setDialogo({ modo: 'nova', dados: { ...TAREFA_VAZIA, data: diaFiltro || '' } })}>
+            <Plus /> Nova tarefa
+          </Button>
+        )
       }
     >
-      {/* Entrada rápida */}
-      <form onSubmit={adicionarRapido} className="group relative">
-        <div className="flex items-center gap-3 border-b-2 border-ink-700 pb-3 transition-colors focus-within:border-lime">
-          <Plus className="h-5 w-5 shrink-0 text-ink-500 transition-colors group-focus-within:text-lime" />
-          <input
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            placeholder="Escreva uma tarefa: amanhã estudar java às 19h"
-            aria-label="Nova tarefa"
-            className="min-w-0 flex-1 bg-transparent text-lg text-ink-50 placeholder:text-ink-600 focus:outline-none sm:text-xl"
-          />
-          <button
-            type="button"
-            onClick={abrirDetalhes}
-            className="hidden items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-ink-400 transition-colors hover:bg-ink-900 hover:text-ink-100 sm:flex"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" /> Detalhes
-          </button>
-          <Button type="submit" size="icon" disabled={!previa?.titulo} aria-label="Adicionar tarefa">
-            <ArrowUp />
-          </Button>
-        </div>
-
-        <div className="mt-3 min-h-[28px]">
-          <AnimatePresence mode="wait" initial={false}>
-            {previa?.titulo ? (
-              <motion.div
-                key="previa"
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="flex flex-wrap items-center gap-1.5 text-xs"
-              >
-                <span className="text-ink-500">Vai criar:</span>
-                <span className="rounded-full bg-ink-800 px-2.5 py-1 text-ink-50">{previa.titulo}</span>
-                <span className="flex items-center gap-1 rounded-full border border-lime/30 bg-lime/10 px-2.5 py-1 text-lime">
-                  <CalendarCheck className="h-3 w-3" /> {rotuloData(previa.data || diaFiltro || '')}
-                </span>
-                {previa.hora && (
-                  <span className="flex items-center gap-1 rounded-full border border-ink-700 px-2.5 py-1 font-mono text-ink-200">
-                    <Clock className="h-3 w-3" /> {previa.hora}
-                  </span>
-                )}
-                <span className="flex items-center gap-1 rounded-full border border-ink-700 px-2.5 py-1 text-ink-200">
-                  <catPrevia.icone className="h-3 w-3" /> {catPrevia.valor}
-                </span>
-                <span className="ml-1 hidden text-ink-600 sm:inline">Enter para salvar</span>
-              </motion.div>
-            ) : (
-              <motion.div key="exemplos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-wrap gap-x-3 gap-y-1">
-                {EXEMPLOS.map((ex) => (
-                  <button
-                    key={ex}
-                    type="button"
-                    onClick={() => setTexto(ex)}
-                    className="font-mono text-xs text-ink-500 underline-offset-4 transition-colors hover:text-ink-100 hover:underline"
-                  >
-                    {ex}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </form>
-
-      {/* Semana */}
-      <div className="mt-8">
-        <WeekStrip contagem={contagemDias} selecionado={diaFiltro} onSelecionar={setDiaFiltro} />
-      </div>
-
-      <StatRow
-        className="mt-10"
-        items={[
-          { label: 'Para hoje', value: grupos.hoje.length },
-          { label: 'Amanhã', value: grupos.amanha.length },
-          { label: 'Atrasadas', value: grupos.atrasadas.length, hint: grupos.atrasadas.length ? 'reorganize ou conclua' : 'tudo em dia' },
-          { label: 'Feitas na semana', value: feitasSemana, accent: feitasSemana > 0 },
+      <Segmented
+        className="mb-8"
+        layoutId="tarefas-aba"
+        value={aba}
+        onChange={(v) => irPara(v, listaAtivaId)}
+        options={[
+          { value: 'tarefas', label: 'Tarefas', icon: ListChecks, count: pendentes.length },
+          { value: 'listas', label: 'Listas de compras', icon: ShoppingCart, count: listas.reduce((n, l) => n + (l.itens || []).filter((i) => !i.feito).length, 0) },
         ]}
       />
 
-      {/* Lista */}
-      <div className="mt-12">
-        {vazio ? (
-          <EmptyState
-            icon={ListChecks}
-            title="Nenhuma tarefa por aqui"
-            description="Escreva no campo lá em cima do jeito que você falaria, por exemplo: amanhã estudar java às 19h."
-          />
-        ) : (
-          <LayoutGroup>
-            {diaFiltro ? (
-              <div className="flex flex-col gap-10">
-                <Grupo
-                  titulo={rotuloData(diaFiltro)}
-                  detalhe={dataPorExtenso(diaFiltro)}
-                  tarefas={doDia}
-                  acoes={acoes}
-                />
-                {doDia.length === 0 && (
-                  <EmptyState
-                    icon={CalendarCheck}
-                    title={`Nada marcado para ${rotuloData(diaFiltro).toLowerCase()}`}
-                    description="O que você escrever agora sem data vai para este dia."
+      {aba === 'listas' ? (
+        <ShoppingLists
+          user={user}
+          listas={listas}
+          carregando={carregandoListas}
+          ativaId={listaAtivaId}
+          onSelecionar={(id) => irPara('listas', id)}
+        />
+      ) : (
+        <>
+        {/* Entrada rápida */}
+        <form onSubmit={adicionarRapido} className="group relative">
+          <div className="flex items-center gap-3 border-b-2 border-ink-700 pb-3 transition-colors focus-within:border-lime">
+            <Plus className="h-5 w-5 shrink-0 text-ink-500 transition-colors group-focus-within:text-lime" />
+            <input
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              placeholder="Escreva uma tarefa: amanhã estudar java às 19h"
+              aria-label="Nova tarefa"
+              className="min-w-0 flex-1 bg-transparent text-lg text-ink-50 placeholder:text-ink-600 focus:outline-none sm:text-xl"
+            />
+            <button
+              type="button"
+              onClick={abrirDetalhes}
+              className="hidden items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-ink-400 transition-colors hover:bg-ink-900 hover:text-ink-100 sm:flex"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" /> Detalhes
+            </button>
+            <Button type="submit" size="icon" disabled={!previa?.titulo} aria-label="Adicionar tarefa">
+              <ArrowUp />
+            </Button>
+          </div>
+
+          <div className="mt-3 min-h-[28px]">
+            <AnimatePresence mode="wait" initial={false}>
+              {previa?.titulo ? (
+                <motion.div
+                  key="previa"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="flex flex-wrap items-center gap-1.5 text-xs"
+                >
+                  <span className="text-ink-500">Vai criar:</span>
+                  <span className="rounded-full bg-ink-800 px-2.5 py-1 text-ink-50">{previa.titulo}</span>
+                  <span className="flex items-center gap-1 rounded-full border border-lime/30 bg-lime/10 px-2.5 py-1 text-lime">
+                    <CalendarCheck className="h-3 w-3" /> {rotuloData(previa.data || diaFiltro || '')}
+                  </span>
+                  {previa.hora && (
+                    <span className="flex items-center gap-1 rounded-full border border-ink-700 px-2.5 py-1 font-mono text-ink-200">
+                      <Clock className="h-3 w-3" /> {previa.hora}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1 rounded-full border border-ink-700 px-2.5 py-1 text-ink-200">
+                    <catPrevia.icone className="h-3 w-3" /> {catPrevia.valor}
+                  </span>
+                  <span className="ml-1 hidden text-ink-600 sm:inline">Enter para salvar</span>
+                </motion.div>
+              ) : (
+                <motion.div key="exemplos" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-wrap gap-x-3 gap-y-1">
+                  {EXEMPLOS.map((ex) => (
+                    <button
+                      key={ex}
+                      type="button"
+                      onClick={() => setTexto(ex)}
+                      className="font-mono text-xs text-ink-500 underline-offset-4 transition-colors hover:text-ink-100 hover:underline"
+                    >
+                      {ex}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </form>
+
+        {/* Semana */}
+        <div className="mt-8">
+          <WeekStrip contagem={contagemDias} selecionado={diaFiltro} onSelecionar={setDiaFiltro} />
+        </div>
+
+        <StatRow
+          className="mt-10"
+          items={[
+            { label: 'Para hoje', value: grupos.hoje.length },
+            { label: 'Amanhã', value: grupos.amanha.length },
+            { label: 'Atrasadas', value: grupos.atrasadas.length, hint: grupos.atrasadas.length ? 'reorganize ou conclua' : 'tudo em dia' },
+            { label: 'Feitas na semana', value: feitasSemana, accent: feitasSemana > 0 },
+          ]}
+        />
+
+        {/* Lista */}
+        <div className="mt-12">
+          {vazio ? (
+            <EmptyState
+              icon={ListChecks}
+              title="Nenhuma tarefa por aqui"
+              description="Escreva no campo lá em cima do jeito que você falaria, por exemplo: amanhã estudar java às 19h."
+            />
+          ) : (
+            <LayoutGroup>
+              {diaFiltro ? (
+                <div className="flex flex-col gap-10">
+                  <Grupo
+                    titulo={rotuloData(diaFiltro)}
+                    detalhe={dataPorExtenso(diaFiltro)}
+                    tarefas={doDia}
+                    acoes={acoes}
                   />
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-2 lg:gap-x-12">
-                <div className="flex flex-col gap-10">
-                  <Grupo titulo="Atrasadas" tarefas={grupos.atrasadas} mostrarData acoes={acoes} />
-                  <Grupo titulo="Hoje" detalhe={dataPorExtenso(hoje)} tarefas={grupos.hoje} acoes={acoes} />
-                  <Grupo titulo="Amanhã" detalhe={dataPorExtenso(amanha)} tarefas={grupos.amanha} acoes={acoes} />
-                  {!grupos.atrasadas.length && !grupos.hoje.length && !grupos.amanha.length && (
-                    <EmptyState icon={CalendarCheck} title="Hoje e amanhã livres" description="Nenhuma tarefa marcada para os próximos dois dias." />
+                  {doDia.length === 0 && (
+                    <EmptyState
+                      icon={CalendarCheck}
+                      title={`Nada marcado para ${rotuloData(diaFiltro).toLowerCase()}`}
+                      description="O que você escrever agora sem data vai para este dia."
+                    />
                   )}
                 </div>
-                <div className="flex flex-col gap-10">
-                  <Grupo titulo="Próximos dias" tarefas={grupos.proximas} mostrarData acoes={acoes} />
-                  <Grupo titulo="Sem data" tarefas={grupos.semData} acoes={acoes} />
-                  {grupos.concluidas.length > 0 && (
-                    <section>
-                      <button
-                        onClick={() => setVerConcluidas((v) => !v)}
-                        className="flex w-full items-center gap-2 border-b border-ink-800 pb-2 text-left text-sm text-ink-400 transition-colors hover:text-ink-100"
-                      >
-                        Concluídas
-                        <span className="font-mono text-xs text-ink-500">{grupos.concluidas.length}</span>
-                        <ChevronDown className={cn('ml-auto h-4 w-4 transition-transform', verConcluidas && 'rotate-180')} />
-                      </button>
-                      <AnimatePresence initial={false}>
-                        {verConcluidas && (
-                          <motion.ul
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden"
-                          >
-                            <AnimatePresence initial={false}>
-                              {grupos.concluidas.map((t) => (
-                                <TaskItem key={t.id} tarefa={t} mostrarData {...acoes} />
-                              ))}
-                            </AnimatePresence>
-                          </motion.ul>
-                        )}
-                      </AnimatePresence>
-                    </section>
-                  )}
+              ) : (
+                <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-2 lg:gap-x-12">
+                  <div className="flex flex-col gap-10">
+                    <Grupo titulo="Atrasadas" tarefas={grupos.atrasadas} mostrarData acoes={acoes} />
+                    <Grupo titulo="Hoje" detalhe={dataPorExtenso(hoje)} tarefas={grupos.hoje} acoes={acoes} />
+                    <Grupo titulo="Amanhã" detalhe={dataPorExtenso(amanha)} tarefas={grupos.amanha} acoes={acoes} />
+                    {!grupos.atrasadas.length && !grupos.hoje.length && !grupos.amanha.length && (
+                      <EmptyState icon={CalendarCheck} title="Hoje e amanhã livres" description="Nenhuma tarefa marcada para os próximos dois dias." />
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-10">
+                    <Grupo titulo="Próximos dias" tarefas={grupos.proximas} mostrarData acoes={acoes} />
+                    <Grupo titulo="Sem data" tarefas={grupos.semData} acoes={acoes} />
+                    {grupos.concluidas.length > 0 && (
+                      <section>
+                        <button
+                          onClick={() => setVerConcluidas((v) => !v)}
+                          className="flex w-full items-center gap-2 border-b border-ink-800 pb-2 text-left text-sm text-ink-400 transition-colors hover:text-ink-100"
+                        >
+                          Concluídas
+                          <span className="font-mono text-xs text-ink-500">{grupos.concluidas.length}</span>
+                          <ChevronDown className={cn('ml-auto h-4 w-4 transition-transform', verConcluidas && 'rotate-180')} />
+                        </button>
+                        <AnimatePresence initial={false}>
+                          {verConcluidas && (
+                            <motion.ul
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <AnimatePresence initial={false}>
+                                {grupos.concluidas.map((t) => (
+                                  <TaskItem key={t.id} tarefa={t} mostrarData {...acoes} />
+                                ))}
+                              </AnimatePresence>
+                            </motion.ul>
+                          )}
+                        </AnimatePresence>
+                      </section>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </LayoutGroup>
-        )}
-      </div>
+              )}
+            </LayoutGroup>
+          )}
+        </div>
+        </>
+      )}
 
       <Dialog
         open={!!dialogo}

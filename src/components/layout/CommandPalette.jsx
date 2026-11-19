@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { Bug, CornerDownLeft, LogOut, Search, UserRound } from "lucide-react";
+import { Bug, CornerDownLeft, LogOut, Search, ShoppingCart, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "@/components/layout/nav";
 
@@ -16,6 +16,7 @@ export function CommandPalette({ open, onClose, onOpenProfile, onOpenBug, onLogo
   const items = useMemo(() => {
     const all = [
       ...NAV_ITEMS.map((i) => ({ id: i.to, label: i.label, group: "Ir para", icon: i.icon, run: () => navigate(i.to) })),
+      { id: "listas", label: "Listas de compras (mercado, farmácia)", group: "Ir para", icon: ShoppingCart, run: () => navigate("/tarefas?aba=listas") },
       { id: "perfil", label: "Abrir perfil", group: "Ações", icon: UserRound, run: onOpenProfile },
       { id: "bug", label: "Reportar um problema", group: "Ações", icon: Bug, run: onOpenBug },
       { id: "sair", label: "Sair da conta", group: "Ações", icon: LogOut, run: onLogout },

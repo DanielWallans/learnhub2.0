@@ -1,12 +1,15 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { Check, Clock, FileText, Star } from 'lucide-react';
+import { Check, Clock, FileText, ShoppingCart, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { QuickDelete } from '@/components/ui/quick-delete';
 import { categoria } from '@/features/tarefas/lib/constants';
 import { hojeIso, rotuloData } from '@/features/tarefas/lib/datas';
 
 // Uma tarefa da lista: marcar como feita, destacar, abrir para editar e excluir
-export function TaskItem({ tarefa, mostrarData, onToggle, onImportante, onEditar, onExcluir }) {
+export function TaskItem({ tarefa, mostrarData, onToggle, onImportante, onEditar, onExcluir, listaDe, onAbrirLista }) {
+  // "Hoje supermercado" ganha um atalho para a lista do mercado
+  const lista = !tarefa.concluida && listaDe ? listaDe(tarefa) : null;
+  const faltam = lista ? (lista.itens || []).filter((i) => !i.feito).length : 0;
   const cat = categoria(tarefa.categoria);
   const Icone = cat.icone;
   const feita = !!tarefa.concluida;
@@ -65,6 +68,16 @@ export function TaskItem({ tarefa, mostrarData, onToggle, onImportante, onEditar
           {tarefa.notas && <FileText className="h-3 w-3" aria-label="Tem anotações" />}
         </p>
       </button>
+
+      {lista && (
+        <button
+          onClick={() => onAbrirLista(lista)}
+          className="mt-0.5 flex shrink-0 items-center gap-1.5 rounded-full border border-lime/30 bg-lime/10 px-2.5 py-1 text-xs text-lime transition-colors hover:bg-lime/20 [@media(pointer:coarse)]:py-1.5"
+        >
+          <ShoppingCart className="h-3 w-3" /> {lista.novo ? 'Criar lista' : faltam ? `${faltam} ${faltam === 1 ? 'item' : 'itens'}` : 'Lista'}
+        </button>
+      )}
+
 
       <div className="flex shrink-0 items-center gap-1">
         <button

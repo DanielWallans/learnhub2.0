@@ -39,7 +39,7 @@ O LearnHub reúne cinco áreas da vida de estudante em um único painel:
 
 | Módulo | O que você faz |
 |---|---|
-| **Tarefas** | Anota o que precisa fazer escrevendo como fala ("amanhã estudar java às 19h") e acompanha hoje, amanhã e a semana. |
+| **Tarefas** | Anota o que precisa fazer escrevendo como fala ("amanhã estudar java às 19h") e acompanha hoje, amanhã e a semana. Tem listas de compras (mercado, farmácia) separadas por seção. |
 | **Biblioteca** | Cadastra livros (capa e páginas automáticas pelo título, ISBN ou link da Amazon), marca a página atual, avalia, escreve anotações e abre o livro nas lojas. |
 | **Finanças** | Registra entradas e saídas, acompanha saldo, gastos e reserva, e vê um gráfico dos últimos 6 meses. |
 | **Habilidades** | Mapeia o que está aprendendo, acompanha o nível de domínio e recebe sugestões de próximo passo. |
@@ -75,7 +75,7 @@ Ao entrar, a foto encolhe e vira o banner do topo do módulo. A animação é a 
 
 <img src="docs/images/modulo-tarefas.jpg" alt="Módulo Tarefas" width="100%" />
 
-<b>Tarefas</b>: entrada rápida com prévia do que foi entendido, faixa da semana, grupos (atrasadas, hoje, amanhã, próximos dias, sem data), destaque de importantes e exclusão com "Desfazer".
+<b>Tarefas</b>: entrada rápida com prévia do que foi entendido, faixa da semana, grupos (atrasadas, hoje, amanhã, próximos dias, sem data), destaque de importantes e exclusão com "Desfazer". Aba <b>Listas de compras</b>: vários itens de uma vez, seções na ordem do corredor, "no carrinho", sugestões do que você costuma comprar e envio pelo WhatsApp. A tarefa "hoje supermercado" abre a lista do mercado.
 
 <table>
   <tr>
@@ -100,6 +100,8 @@ Em Tarefas e em Finanças, dá para registrar escrevendo uma frase comum. O text
 | `gastei 32 no almoço` | Saída de R$ 32,00 em "Refeição" |
 | `recebi 800 de bolsa` | Entrada de R$ 800,00 em "Bolsa de estudos" |
 | `guardei 100` | R$ 100,00 do saldo vão para a reserva |
+| `2 leite, pão, 1kg de arroz, detergente` (lista do mercado) | Leite (2) em Frios e laticínios, Pão em Padaria, Arroz (1kg) em Mercearia, Detergente em Limpeza |
+| `dipirona, protetor solar, 2 sabonetes` (lista da farmácia) | Dipirona em Remédios, Protetor solar e Sabonetes (2) em Higiene e cuidados |
 
 ### 6. Busca rápida
 
@@ -167,7 +169,7 @@ src/
 │   ├── financas/             #   Finanças (gráfico, lançamento rápido, cartão)
 │   ├── habilidades/          #   Habilidades (radar, mapa, dicas)
 │   ├── carreira/             #   Carreira (etapas, candidaturas, metas)
-│   ├── tarefas/              #   Tarefas (entrada por frase, semana, grupos por dia)
+│   ├── tarefas/              #   Tarefas (entrada por frase, semana, grupos por dia, listas de compras)
 │   └── conta/                #   perfil e relatório de problemas
 │
 ├── lib/
@@ -247,6 +249,7 @@ erDiagram
     ALUNOS ||--o{ CANDIDATURAS : userId
     ALUNOS ||--o{ CARREIRA_METAS : userId
     ALUNOS ||--o{ TAREFAS : userId
+    ALUNOS ||--o{ LISTAS : userId
 
     ALUNOS {
         string uid PK
@@ -301,6 +304,13 @@ erDiagram
         string categoria
         boolean importante
         boolean concluida
+    }
+    LISTAS {
+        string userId FK
+        string nome
+        string tipo
+        array itens
+        map frequentes
     }
     CARREIRA_METAS {
         string userId FK
