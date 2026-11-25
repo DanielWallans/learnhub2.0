@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { signInWithEmailAndPassword } from "@/lib/auth";
+import { doc, getDoc, setDoc } from "@/lib/db";
 import { AnimatePresence } from "motion/react";
 import { AlertCircle, Eye, EyeOff, GraduationCap, Lock, Mail, Settings2 } from "lucide-react";
-import { auth, db } from "@/lib/firebase";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { useAuth } from "@/context/AuthContext";
 import { AuthLayout, FormMessage } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";

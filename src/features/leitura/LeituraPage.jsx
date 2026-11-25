@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/db';
+import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from '@/lib/db';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, BookOpen, X, Plus, Bookmark, Heart, LayoutGrid, List, Upload, Library } from 'lucide-react';
 import { cn } from '@/lib/utils';

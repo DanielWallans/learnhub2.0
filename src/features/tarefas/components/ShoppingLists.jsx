@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { addDoc, collection, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, setDoc, updateDoc } from '@/lib/db';
 import { ArrowUp, Check, Copy, MessageCircle, Pencil, Plus, RotateCcw, Share2, ShoppingCart, Trash2 } from 'lucide-react';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/db';
 import { COL } from '@/lib/collections';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

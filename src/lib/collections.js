@@ -1,4 +1,4 @@
-// Nomes das coleções do Firestore em um só lugar.
+// Nomes das tabelas do Supabase (antes coleções do Firestore) em um só lugar.
 // Todo documento de usuário carrega o campo "userId" (ou usa o próprio uid como id do documento).
 export const COL = {
   alunos: 'alunos', // perfil do estudante (id = uid)

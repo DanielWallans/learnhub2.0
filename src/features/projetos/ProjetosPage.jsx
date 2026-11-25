@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, LayoutGroup } from 'motion/react';
-import { addDoc, collection, deleteDoc, doc, onSnapshot, query, setDoc, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, onSnapshot, query, setDoc, updateDoc, where } from '@/lib/db';
 import { Columns3, FolderKanban, List, Plus, Search, X } from 'lucide-react';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/db';
 import { COL } from '@/lib/collections';
 import { cn } from '@/lib/utils';
 import { useStudent } from '@/context/StudentContext';

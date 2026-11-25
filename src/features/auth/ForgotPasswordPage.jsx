@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { sendPasswordResetEmail } from "firebase/auth";
+import { sendPasswordResetEmail } from "@/lib/auth";
 import { AnimatePresence } from "motion/react";
 import { AlertCircle, ArrowLeft, Mail, MailCheck } from "lucide-react";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/lib/auth";
 import { AuthLayout, FormMessage } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";

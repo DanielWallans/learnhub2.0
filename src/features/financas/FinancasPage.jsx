@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowDownRight, ArrowUpRight, Wallet, Plus, Minus, PiggyBank, Pencil, CreditCard, RotateCcw, Send, Zap, Eye, EyeOff } from 'lucide-react';
-import { collection, query, where, onSnapshot, doc, addDoc, setDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { collection, query, where, onSnapshot, doc, addDoc, setDoc, deleteDoc } from '@/lib/db';
+import { db } from '@/lib/db';
 import { cn } from '@/lib/utils';
 import { useStudent } from '@/context/StudentContext';
 import { ModuleFrame } from '@/components/layout/ModuleFrame';

@@ -2,7 +2,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { Bug, Command, LogOut, Search } from "lucide-react";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/lib/auth";
 import { useStudent } from "@/context/StudentContext";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/brand/Logo";

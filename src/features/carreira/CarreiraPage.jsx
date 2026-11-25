@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { db } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/db';
+import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, deleteDoc } from '@/lib/db';
 import { Target, Briefcase, Pencil, Trash2, Plus, Check, Globe, ExternalLink, MapPin, Wallet, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStudent } from '@/context/StudentContext';

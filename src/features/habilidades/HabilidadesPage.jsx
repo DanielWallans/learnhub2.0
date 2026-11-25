@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { db } from '@/lib/firebase';
-import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/db';
+import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from '@/lib/db';
 import { Plus, Sparkles, Target, Radar as RadarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStudent } from '@/context/StudentContext';

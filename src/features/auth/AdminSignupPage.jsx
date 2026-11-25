@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword } from "@/lib/auth";
+import { doc, setDoc } from "@/lib/db";
 import { AnimatePresence } from "motion/react";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
-import { auth, db } from "@/lib/firebase";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { AuthLayout, FormMessage } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Field, Input, TextField } from "@/components/ui/field";

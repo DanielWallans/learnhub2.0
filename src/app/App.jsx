@@ -1,5 +1,7 @@
-import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { onPasswordRecovery } from '@/lib/auth';
+import { chegouPorRecuperacao } from '@/lib/supabase';
 import Home from '@/features/landing/HomePage';
 import Loading from '@/components/layout/Loading';
 import PrivateRoute from '@/app/PrivateRoute';
@@ -13,6 +15,7 @@ const Login = lazy(() => import('@/features/auth/LoginPage'));
 const Cadastros = lazy(() => import('@/features/auth/AdminSignupPage'));
 const CadastroAluno = lazy(() => import('@/features/auth/SignupPage'));
 const ForgotPassword = lazy(() => import('@/features/auth/ForgotPasswordPage'));
+const ResetPassword = lazy(() => import('@/features/auth/ResetPasswordPage'));
 const BoasVindas = lazy(() => import('@/features/auth/WelcomePage'));
 const Dashboard = lazy(() => import('@/features/painel/PainelPage'));
 const Leitura = lazy(() => import('@/features/leitura/LeituraPage'));
@@ -22,12 +25,26 @@ const ModuloCarreira = lazy(() => import('@/features/carreira/CarreiraPage'));
 const Tarefas = lazy(() => import('@/features/tarefas/TarefasPage'));
 const Projetos = lazy(() => import('@/features/projetos/ProjetosPage'));
 
+// Quem abre o link de "esqueci a senha" vai para a tela de nova senha, em qualquer página que caia
+function RecuperacaoDeSenha() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    if (chegouPorRecuperacao && pathname !== '/redefinir-senha') navigate('/redefinir-senha', { replace: true });
+    return onPasswordRecovery(() => navigate('/redefinir-senha', { replace: true }));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
       <StudentProvider>
         <FeedbackProvider>
           <Router>
+            <RecuperacaoDeSenha />
             <Suspense fallback={<Loading />}>
               <Routes>
                 {/* Rotas públicas */}
@@ -35,6 +52,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/esqueci-senha" element={<ForgotPassword />} />
                 <Route path="/recuperar-senha" element={<ForgotPassword />} />
+                <Route path="/redefinir-senha" element={<ResetPassword />} />
                 <Route path="/cadastros" element={<Cadastros />} />
                 <Route path="/cadastro-aluno" element={<CadastroAluno />} />
                 <Route path="/login-aluno" element={<Navigate to="/login" replace />} />

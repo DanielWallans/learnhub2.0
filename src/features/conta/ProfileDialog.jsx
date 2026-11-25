@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "@/lib/db";
 import { GraduationCap, Pencil, User } from "lucide-react";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/db";
 import { useStudent } from "@/context/StudentContext";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";

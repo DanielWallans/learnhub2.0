@@ -11,7 +11,7 @@ Organização para estudantes: as tarefas do dia, o livro que você está lendo,
 <br />
 
 ![React](https://img.shields.io/badge/React-19-0A0A0B?style=flat-square&logo=react&logoColor=C6F432&labelColor=0A0A0B)
-![Firebase](https://img.shields.io/badge/Firebase-11-0A0A0B?style=flat-square&logo=firebase&logoColor=C6F432&labelColor=0A0A0B)
+![Supabase](https://img.shields.io/badge/Supabase-2-0A0A0B?style=flat-square&logo=supabase&logoColor=C6F432&labelColor=0A0A0B)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-0A0A0B?style=flat-square&logo=tailwindcss&logoColor=C6F432&labelColor=0A0A0B)
 ![Three.js](https://img.shields.io/badge/Three.js-r184-0A0A0B?style=flat-square&logo=threedotjs&logoColor=C6F432&labelColor=0A0A0B)
 ![GSAP](https://img.shields.io/badge/GSAP-3.15-0A0A0B?style=flat-square&logo=greensock&logoColor=C6F432&labelColor=0A0A0B)
@@ -134,7 +134,7 @@ A navegação vira um dock embaixo da tela, os campos usam 16 px (o iPhone não 
 | Animação | **Motion 14** | Transições de layout, abas, diálogos e microinterações |
 | Animação | **GSAP 3.15** + ScrollTrigger + SplitText | Títulos letra a letra, scroll horizontal fixado e a expansão do card |
 | 3D | **Three.js** + **React Three Fiber** | Campo de partículas com shader próprio no hero e no login |
-| Dados | **Firebase Auth** + **Cloud Firestore** | Login e banco de dados em tempo real |
+| Dados | **Supabase** (Auth + Postgres + Realtime) | Login e banco de dados em tempo real |
 | Ícones | **Lucide** | Ícones consistentes (o app não usa emojis) |
 | Fontes | **Geist** e **Geist Mono** | Texto e números, servidas junto com o app |
 | Build | **Create React App 5** + **CRACO 7** | Build e alias `@/` para `src/` |
@@ -159,7 +159,7 @@ src/
 │   └── brand/                #   logo
 │
 ├── context/
-│   ├── AuthContext.jsx       # sessão do Firebase + tipo de conta (aluno/admin)
+│   ├── AuthContext.jsx       # sessão do Supabase + tipo de conta (aluno/admin)
 │   └── StudentContext.jsx    # perfil do aluno em tempo real
 │
 ├── features/                 # Um diretório por funcionalidade
@@ -179,8 +179,10 @@ src/
 │   └── conta/                #   perfil e relatório de problemas
 │
 ├── lib/
-│   ├── firebase.js           # inicialização do Firebase
-│   ├── collections.js        # nomes das coleções do Firestore em um só lugar
+│   ├── supabase.js           # cliente do Supabase
+│   ├── db.js                 # camada de dados (API no estilo Firestore sobre o Supabase)
+│   ├── auth.js               # login, cadastro e recuperação de senha
+│   ├── collections.js        # nomes das tabelas em um só lugar
 │   └── utils.js              # cn() para juntar classes do Tailwind
 │
 ├── assets/modules/           # fotos dos módulos (preto e branco, comprimidas)
@@ -191,7 +193,7 @@ src/
 
 ### Visão geral
 
-O LearnHub é uma SPA estática (hospedada na Vercel) que fala direto com o Firebase. Não existe servidor próprio: a autenticação é do Firebase Auth, e o acesso aos dados é controlado pelas regras do Firestore.
+O LearnHub é uma SPA estática (hospedada na Vercel) que fala direto com o Supabase. Não existe servidor próprio: a autenticação é do Supabase Auth, e o acesso aos dados é controlado pelas políticas RLS do Postgres.
 
 ```mermaid
 flowchart LR
@@ -204,9 +206,9 @@ flowchart LR
         P --> DS["Design system<br/>components/ui"]
     end
 
-    CTX -- "login / sessão" --> AUTH[("Firebase Auth")]
-    P -- "onSnapshot (tempo real)<br/>escritas" --> FS[("Cloud Firestore")]
-    FS --- RULES["firestore.rules<br/>cada um só acessa o que é seu"]
+    CTX -- "login / sessão" --> AUTH[("Supabase Auth")]
+    P -- "onSnapshot (tempo real)<br/>escritas" --> FS[("Supabase Postgres")]
+    FS --- RULES["RLS (supabase/schema.sql)<br/>cada um só acessa o que é seu"]
     P -- "busca de livros e capas" --> GB["Google Books API"]
     GB -. "se falhar" .-> OL["Open Library API"]
     OL -. "ISBN" .-> AMZ["Capas Amazon"]
@@ -214,15 +216,15 @@ flowchart LR
 
 ### Fluxo de autenticação
 
-O app espera o perfil ser confirmado no Firestore antes de abrir qualquer rota privada, para nunca redirecionar alguém logado de volta para o login.
+O app espera o perfil ser confirmado no banco antes de abrir qualquer rota privada, para nunca redirecionar alguém logado de volta para o login.
 
 ```mermaid
 sequenceDiagram
     actor E as Estudante
     participant L as LoginPage
-    participant FA as Firebase Auth
+    participant FA as Supabase Auth
     participant AC as AuthContext
-    participant FS as Firestore
+    participant FS as Supabase
     participant PR as PrivateRoute
 
     E->>L: e-mail e senha
@@ -365,19 +367,26 @@ flowchart TD
 | Detalhe | Como |
 |---|---|
 | Imagem válida | Carregada no navegador (sem CORS); GIF 1×1 da Amazon e PNG 128×170 "image not available" do Google contam como sem capa |
-| Capa quebrada em livro salvo | `BookCover` refaz a busca e grava a capa nova no Firestore |
+| Capa quebrada em livro salvo | `BookCover` refaz a busca e grava a capa nova no banco |
 | Cota do Google Books | Sem chave a cota é compartilhada e esgota (429); chave opcional em `REACT_APP_GOOGLE_BOOKS_KEY` |
 | Onde comprar | Amazon (`/dp/{ISBN-10}` ou busca), Estante Virtual, Mercado Livre e Google Livros, montados a partir do livro |
 
 ### Segurança
 
-As regras em [`firestore.rules`](firestore.rules) garantem que:
+As políticas RLS em [`supabase/schema.sql`](supabase/schema.sql) garantem que:
 
 - cada pessoa só lê e escreve os próprios documentos;
 - ninguém consegue criar um registro em nome de outra pessoa nem trocar o dono de um registro existente;
 - relatórios de problema podem ser enviados por quem está logado, mas não lidos pelo app.
 
-A senha nunca é gravada no Firestore: ela fica só no Firebase Authentication. A matrícula é gerada no navegador, sem consultar outros alunos, o que permite manter a coleção `alunos` fechada.
+A senha nunca é gravada nas tabelas do app: ela fica só no Supabase Auth. A matrícula é gerada no navegador, sem consultar outros alunos, o que permite manter a coleção `alunos` fechada.
+
+### Configurar o Supabase
+
+1. No SQL Editor do projeto, rode [`supabase/schema.sql`](supabase/schema.sql).
+2. Em Authentication > Sign In / Providers > Email, desligue **Confirm email** (o cadastro grava o perfil logo depois de criar a conta).
+3. Em Authentication > URL Configuration, coloque a URL do site em **Site URL** e adicione `https://SEU-DOMINIO/redefinir-senha` e `http://localhost:3000/redefinir-senha` em **Redirect URLs**.
+4. Copie `.env.example` para `.env.local` e preencha a chave anon (Project Settings > API). Na Vercel, crie as mesmas variáveis.
 
 ## Autor
 
