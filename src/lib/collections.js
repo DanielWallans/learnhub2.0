@@ -11,5 +11,6 @@ export const COL = {
   carreiraMetas: 'carreira_metas', // metas de carreira
   tarefas: 'tarefas', // tarefas do dia a dia
   listas: 'listas', // listas de compras (mercado, farmácia...)
+  projetos: 'projetos', // projetos de qualquer área (etapas, diário, links, gastos)
   bugReports: 'bug-reports', // relatórios enviados pelo app
 };

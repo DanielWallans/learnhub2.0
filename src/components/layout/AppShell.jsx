@@ -62,7 +62,7 @@ function MobileDock() {
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  "relative flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-[10px] transition-colors",
+                  "relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl py-2 text-[10px] transition-colors",
                   isActive ? "text-ink-950" : "text-ink-400"
                 )
               }
@@ -77,7 +77,7 @@ function MobileDock() {
                     />
                   )}
                   <Icon className="relative h-[18px] w-[18px]" strokeWidth={isActive ? 2.25 : 1.75} />
-                  <span className="relative font-medium">{item.label}</span>
+                  <span className="relative max-w-full truncate px-0.5 font-medium">{item.curto || item.label}</span>
                 </>
               )}
             </NavLink>

@@ -35,7 +35,7 @@ Organização para estudantes: as tarefas do dia, o livro que você está lendo,
 
 ## Sobre
 
-O LearnHub reúne cinco áreas da vida de estudante em um único painel:
+O LearnHub reúne seis áreas da vida de estudante em um único painel:
 
 | Módulo | O que você faz |
 |---|---|
@@ -44,6 +44,7 @@ O LearnHub reúne cinco áreas da vida de estudante em um único painel:
 | **Finanças** | Registra entradas e saídas, acompanha saldo, gastos e reserva, e vê um gráfico dos últimos 6 meses. |
 | **Habilidades** | Mapeia o que está aprendendo, acompanha o nível de domínio e recebe sugestões de próximo passo. |
 | **Carreira** | Acompanha cada candidatura da inscrição à aprovação e define metas (cursos, certificações, idiomas). |
+| **Projetos** | Organiza projetos de qualquer área (app, TCC, reforma, viagem, negócio) em um quadro por status, com etapas, prazo, diário de horas, links e orçamento. |
 
 Tudo fica salvo na nuvem e aparece na hora em qualquer aparelho.
 
@@ -59,9 +60,9 @@ Login com e-mail e senha, cadastro em três etapas e recuperação de senha por 
 
 ### 2. O painel
 
-Depois de entrar, o painel resume os cinco módulos com dados reais: o livro em andamento, o saldo (que pode ser ocultado), o domínio médio das habilidades, a última candidatura e as tarefas de hoje e amanhã.
+Depois de entrar, o painel resume os seis módulos com dados reais: o livro em andamento, o saldo (que pode ser ocultado), o domínio médio das habilidades, a última candidatura, as tarefas de hoje e amanhã e os projetos em andamento.
 
-<img src="docs/images/painel.jpg" alt="Painel com os cinco módulos" width="100%" />
+<img src="docs/images/painel.jpg" alt="Painel com os seis módulos" width="100%" />
 
 ### 3. Do card ao módulo
 
@@ -87,6 +88,10 @@ Ao entrar, a foto encolhe e vira o banner do topo do módulo. A animação é a 
     <td width="50%"><img src="docs/images/modulo-carreira.jpg" alt="Módulo Carreira" /><br /><b>Carreira</b>: funil de candidaturas, etapas de cada processo, anotações e metas.</td>
   </tr>
 </table>
+
+<img src="docs/images/modulo-projetos.jpg" alt="Módulo Projetos" width="100%" />
+
+<b>Projetos</b>: quadro por status (ideia, planejando, em andamento, pausado, concluído) com arrastar e soltar, ou lista. Cada projeto tem área, prioridade, prazo e etiquetas, e as abas Etapas (checklist com prazo; cada etapa pode virar uma tarefa), Diário (o que foi feito e quantas horas), Links e Orçamento (previsto e gastos). Oito modelos prontos já criam as etapas: app, TCC, curso, evento, reforma, conteúdo, negócio e meta pessoal.
 
 ### 5. Escrever do jeito que se fala
 
@@ -170,6 +175,7 @@ src/
 │   ├── habilidades/          #   Habilidades (radar, mapa, dicas)
 │   ├── carreira/             #   Carreira (etapas, candidaturas, metas)
 │   ├── tarefas/              #   Tarefas (entrada por frase, semana, grupos por dia, listas de compras)
+│   ├── projetos/             #   Projetos (quadro, etapas, diário, links, orçamento, modelos)
 │   └── conta/                #   perfil e relatório de problemas
 │
 ├── lib/
@@ -249,6 +255,7 @@ erDiagram
     ALUNOS ||--o{ CANDIDATURAS : userId
     ALUNOS ||--o{ CARREIRA_METAS : userId
     ALUNOS ||--o{ TAREFAS : userId
+    ALUNOS ||--o{ PROJETOS : userId
     ALUNOS ||--o{ LISTAS : userId
 
     ALUNOS {
@@ -304,6 +311,17 @@ erDiagram
         string categoria
         boolean importante
         boolean concluida
+    }
+    PROJETOS {
+        string userId FK
+        string nome
+        string area
+        string status
+        string prazo
+        array etapas
+        array diario
+        array links
+        array gastos
     }
     LISTAS {
         string userId FK
@@ -364,5 +382,7 @@ A senha nunca é gravada no Firestore: ela fica só no Firebase Authentication. 
 ## Autor
 
 Foto do módulo Tarefas: relógio do Museu d'Orsay, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Horloge_mus%C3%A9e_d%27Orsay.jpg) (domínio público, CC0).
+
+Foto do módulo Projetos: sala de desenho técnico, Fortepan 3557, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Technical_drawing,_drawing_board,_workplace,_planning,_men,_work_Fortepan_3557.jpg) (domínio público).
 
 Feito por **Daniel Wallans** · [github.com/DanielWallans](https://github.com/DanielWallans)

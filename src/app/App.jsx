@@ -20,6 +20,7 @@ const ModuloFinancas = lazy(() => import('@/features/financas/FinancasPage'));
 const Habilidades = lazy(() => import('@/features/habilidades/HabilidadesPage'));
 const ModuloCarreira = lazy(() => import('@/features/carreira/CarreiraPage'));
 const Tarefas = lazy(() => import('@/features/tarefas/TarefasPage'));
+const Projetos = lazy(() => import('@/features/projetos/ProjetosPage'));
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
                   <Route path="/habilidades" element={<Habilidades />} />
                   <Route path="/carreira" element={<ModuloCarreira />} />
                   <Route path="/tarefas" element={<Tarefas />} />
+                  <Route path="/projetos" element={<Projetos />} />
                 </Route>
 
                 <Route path="/" element={<Navigate to="/home" replace />} />

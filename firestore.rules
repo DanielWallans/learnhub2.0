@@ -75,6 +75,11 @@ service cloud.firestore {
       allow create: if criandoParaSi();
       allow update: if donoDoRegistro() && mantemDono();
     }
+    match /projetos/{id} {
+      allow read, delete: if donoDoRegistro();
+      allow create: if criandoParaSi();
+      allow update: if donoDoRegistro() && mantemDono();
+    }
 
     // Relatórios de problema: qualquer pessoa logada envia, ninguém lê pelo app
     match /bug-reports/{id} {

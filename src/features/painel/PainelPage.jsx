@@ -13,8 +13,10 @@ import FinancasImg from '@/assets/modules/financas.jpg';
 import HabilidadesImg from '@/assets/modules/habilidades.jpg';
 import CarreiraImg from '@/assets/modules/carreira.jpg';
 import TarefasImg from '@/assets/modules/tarefas.jpg';
+import ProjetosImg from '@/assets/modules/projetos.jpg';
 import { amanhaIso, hojeIso } from '@/features/tarefas/lib/datas';
 import { categoria } from '@/features/tarefas/lib/constants';
+import { ordenarProjetos, progresso as progressoProjeto, rotuloPrazo } from '@/features/projetos/lib/constants';
 import { COL } from '@/lib/collections';
 import { useMostrarValores, VALOR_OCULTO } from '@/features/financas/lib/useMostrarValores';
 
@@ -83,6 +85,7 @@ const Dashboard = () => {
   const [habilidades, setHabilidades] = useState([]);
   const [candidaturas, setCandidaturas] = useState([]);
   const [tarefas, setTarefas] = useState([]);
+  const [projetos, setProjetos] = useState([]);
   const [financas, setFinancas] = useState({ totalBalance: 0, totalSpending: 0, totalSaved: 0 });
   const [mostrarSaldo, toggleSaldo] = useMostrarValores();
 
@@ -93,6 +96,7 @@ const Dashboard = () => {
     import('@/features/habilidades/HabilidadesPage');
     import('@/features/carreira/CarreiraPage');
     import('@/features/tarefas/TarefasPage');
+    import('@/features/projetos/ProjetosPage');
   }, []);
 
   useEffect(() => {
@@ -107,6 +111,9 @@ const Dashboard = () => {
       ),
       onSnapshot(query(collection(db, COL.tarefas), where('userId', '==', uid)), (s) =>
         setTarefas(s.docs.map((d) => ({ id: d.id, ...d.data() })))
+      ),
+      onSnapshot(query(collection(db, COL.projetos), where('userId', '==', uid)), (s) =>
+        setProjetos(s.docs.map((d) => ({ id: d.id, ...d.data() })))
       ),
       onSnapshot(query(collection(db, COL.candidaturas), where('userId', '==', uid)), (s) =>
         setCandidaturas(s.docs.map((d) => ({ id: d.id, ...d.data() })))
@@ -163,6 +170,8 @@ const Dashboard = () => {
   const pendentes = tarefas.filter((t) => !t.concluida);
   const tarefasHoje = pendentes.filter((t) => t.data === diaHoje);
   const atrasadas = pendentes.filter((t) => t.data && t.data < diaHoje).length;
+  const projetosAtivos = projetos.filter((p) => p.status === 'andamento').sort(ordenarProjetos);
+  const projetosConcluidos = projetos.filter((p) => p.status === 'concluido').length;
   const proximasTarefas = pendentes
     .filter((t) => t.data === diaHoje || t.data === diaAmanha)
     .sort((a, b) => a.data.localeCompare(b.data) || (b.importante ? 1 : 0) - (a.importante ? 1 : 0) || (a.hora || '99').localeCompare(b.hora || '99'))
@@ -267,14 +276,14 @@ const Dashboard = () => {
           )}
         </ModuleCard>
 
-        <ModuleCard id="tarefas" to="/tarefas" index="05" title="Tarefas" image={TarefasImg} className="md:col-span-2 xl:col-span-4" i={5} onOpen={abrirModulo}>
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <ModuleCard id="tarefas" to="/tarefas" index="05" title="Tarefas" image={TarefasImg} className="md:col-span-2 xl:col-span-2" i={5} onOpen={abrirModulo}>
+          <div className="flex flex-col gap-5">
             <p className="font-mono text-sm text-ink-300">
               <span className="text-2xl text-ink-50">{tarefasHoje.length}</span> para hoje
               {atrasadas > 0 && <span className="ml-3 text-ink-50">· {atrasadas} atrasada{atrasadas > 1 ? 's' : ''}</span>}
             </p>
             {proximasTarefas.length > 0 ? (
-              <ul className="grid gap-x-8 gap-y-2 sm:grid-cols-2 lg:min-w-[560px]">
+              <ul className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
                 {proximasTarefas.map((t) => {
                   const Icone = categoria(t.categoria).icone;
                   return (
@@ -293,6 +302,35 @@ const Dashboard = () => {
               <p className="text-sm text-ink-300">Nada para hoje nem amanhã. Escreva uma tarefa como "amanhã estudar java às 19h".</p>
             )}
           </div>
+        </ModuleCard>
+
+        <ModuleCard id="projetos" to="/projetos" index="06" title="Projetos" image={ProjetosImg} className="md:col-span-2 xl:col-span-2" i={6} onOpen={abrirModulo}>
+          {projetosAtivos.length > 0 ? (
+            <ul className="flex flex-col gap-3">
+              {projetosAtivos.slice(0, 3).map((p) => {
+                const prog = progressoProjeto(p);
+                return (
+                  <li key={p.id} className="min-w-0">
+                    <div className="flex items-baseline justify-between gap-3 text-sm">
+                      <span className="truncate text-ink-50">{p.nome}</span>
+                      <span className="shrink-0 font-mono text-xs text-ink-300">{prog}%</span>
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-3">
+                      <div className="h-1 flex-1 overflow-hidden rounded-full bg-ink-50/15">
+                        <div className="h-full rounded-full bg-lime" style={{ width: `${prog}%` }} />
+                      </div>
+                      {p.prazo && <span className="shrink-0 font-mono text-[11px] text-ink-400">{rotuloPrazo(p.prazo)}</span>}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="text-sm text-ink-300">{projetos.length ? 'Nenhum projeto em andamento agora.' : 'Organize seus projetos de qualquer área: etapas, prazo e diário.'}</p>
+          )}
+          <p className="mt-4 font-mono text-xs text-ink-400">
+            {projetos.length} {projetos.length === 1 ? 'projeto' : 'projetos'} · {projetosAtivos.length} em andamento · {projetosConcluidos} concluídos
+          </p>
         </ModuleCard>
       </div>
     </div>
