@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Field, Input, Select, Textarea, TextField } from '@/components/ui/field';
-import { AREAS, MODELOS, PRIORIDADES, STATUS, area as areaDe } from '@/features/projetos/lib/constants';
+import { AREAS, PRIORIDADES, STATUS } from '@/features/projetos/lib/constants';
 
-// Formulário de criar/editar. Na criação, o modelo escolhido já traz a área e as etapas.
-export function ProjectForm({ id, value, onChange, onSubmit, criando, modelo, onModelo }) {
+// Formulário de criar/editar. As etapas são adicionadas pelo próprio usuário.
+export function ProjectForm({ id, value, onChange, onSubmit, criando }) {
   const [tag, setTag] = useState('');
   const set = (campo) => (e) => onChange({ ...value, [campo]: e.target.value });
 
@@ -17,38 +16,13 @@ export function ProjectForm({ id, value, onChange, onSubmit, criando, modelo, on
 
   return (
     <form id={id} onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-      {criando && (
-        <Field label="Começar a partir de" className="sm:col-span-2" hint="O modelo já cria as etapas mais comuns. Dá para editar tudo depois.">
-          <div className="flex flex-wrap gap-1.5">
-            {MODELOS.map((m) => {
-              const Icone = areaDe(m.area).icone;
-              const ativo = modelo === m.id;
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => onModelo(m)}
-                  className={cn(
-                    'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors',
-                    ativo ? 'border-ink-50 bg-ink-50 text-ink-950' : 'border-ink-700 text-ink-300 hover:border-ink-500 hover:text-ink-50'
-                  )}
-                >
-                  <Icone className="h-3.5 w-3.5" /> {m.nome}
-                  {m.etapas.length > 0 && <span className={cn('font-mono text-[10px]', ativo ? 'text-ink-600' : 'text-ink-500')}>{m.etapas.length}</span>}
-                </button>
-              );
-            })}
-          </div>
-        </Field>
-      )}
-
       <TextField
         className="sm:col-span-2"
         label="Nome do projeto"
         placeholder="App de receitas, TCC, reforma do quarto, viagem de férias..."
         value={value.nome}
         onChange={set('nome')}
-        autoFocus={!criando}
+        autoFocus
         required
       />
 

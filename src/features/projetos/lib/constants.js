@@ -49,107 +49,6 @@ export const PRIORIDADES = [
 ];
 export const prioridade = (valor) => PRIORIDADES.find((p) => p.valor === valor) || PRIORIDADES[1];
 
-// Modelos: já criam as etapas mais comuns de cada tipo de projeto
-export const MODELOS = [
-  { id: 'branco', nome: 'Em branco', area: 'Outro', etapas: [] },
-  {
-    id: 'app',
-    nome: 'App ou site',
-    area: 'Tecnologia',
-    etapas: [
-      'Definir o problema e o público',
-      'Listar as funcionalidades do MVP',
-      'Desenhar as telas (protótipo)',
-      'Configurar o projeto e o repositório',
-      'Desenvolver o MVP',
-      'Testar com pessoas de verdade',
-      'Publicar',
-      'Coletar feedback e melhorar',
-    ],
-  },
-  {
-    id: 'tcc',
-    nome: 'TCC ou trabalho acadêmico',
-    area: 'Estudos',
-    etapas: [
-      'Escolher o tema',
-      'Definir problema e objetivos',
-      'Revisão bibliográfica',
-      'Definir a metodologia',
-      'Coletar e analisar os dados',
-      'Escrever a introdução',
-      'Escrever o desenvolvimento',
-      'Conclusão e referências',
-      'Revisar formatação (ABNT)',
-      'Preparar a apresentação',
-    ],
-  },
-  {
-    id: 'curso',
-    nome: 'Aprender um assunto',
-    area: 'Estudos',
-    etapas: [
-      'Definir o objetivo e o prazo',
-      'Escolher o material (curso, livro, vídeos)',
-      'Estudar o básico',
-      'Fazer exercícios práticos',
-      'Construir um projeto aplicando o conteúdo',
-      'Revisar e ensinar para alguém',
-    ],
-  },
-  {
-    id: 'evento',
-    nome: 'Evento ou viagem',
-    area: 'Eventos',
-    etapas: [
-      'Definir data e orçamento',
-      'Lista de pessoas',
-      'Reservar local ou hospedagem',
-      'Contratar fornecedores ou transporte',
-      'Enviar convites ou confirmar reservas',
-      'Checklist do dia',
-    ],
-  },
-  {
-    id: 'reforma',
-    nome: 'Reforma ou casa',
-    area: 'Casa',
-    etapas: [
-      'Medir e planejar',
-      'Pedir orçamentos',
-      'Comprar os materiais',
-      'Contratar mão de obra',
-      'Execução',
-      'Acabamento e limpeza',
-    ],
-  },
-  {
-    id: 'conteudo',
-    nome: 'Conteúdo (vídeo, blog, música)',
-    area: 'Criativo',
-    etapas: ['Definir tema e público', 'Roteiro ou rascunho', 'Produção ou gravação', 'Edição', 'Publicação', 'Divulgação'],
-  },
-  {
-    id: 'negocio',
-    nome: 'Negócio ou renda extra',
-    area: 'Negócios',
-    etapas: [
-      'Validar a ideia com possíveis clientes',
-      'Pesquisar concorrentes',
-      'Calcular custos e preço',
-      'Formalizar (MEI, CNPJ)',
-      'Montar a vitrine (perfil, site, catálogo)',
-      'Conseguir os primeiros clientes',
-    ],
-  },
-  {
-    id: 'meta',
-    nome: 'Meta pessoal ou saúde',
-    area: 'Saúde',
-    etapas: ['Definir uma meta que dá para medir', 'Avaliação inicial', 'Montar o plano semanal', 'Acompanhar o progresso', 'Reavaliar e ajustar'],
-  },
-];
-
 export const novoId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
 export const PROJETO_VAZIO = {
@@ -169,9 +68,6 @@ export const PROJETO_VAZIO = {
   orcamento: 0,
   gastos: [],
 };
-
-export const etapasDoModelo = (modeloId) =>
-  (MODELOS.find((m) => m.id === modeloId)?.etapas || []).map((titulo) => ({ id: novoId(), titulo, feita: false, prazo: '' }));
 
 /* ---------------- Cálculos ---------------- */
 

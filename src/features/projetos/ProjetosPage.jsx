@@ -18,12 +18,10 @@ import { ProjectForm } from '@/features/projetos/components/ProjectForm';
 import { ProjectDetail } from '@/features/projetos/components/ProjectDetail';
 import {
   AREAS,
-  MODELOS,
   PROJETO_VAZIO,
   STATUS,
   atrasado,
   categoriaTarefa,
-  etapasDoModelo,
   formatarHoras,
   hojeIso,
   ordenarProjetos,
@@ -44,7 +42,7 @@ export default function ProjetosPage() {
   const [verConcluidos, setVerConcluidos] = useState(true);
   const [arrastando, setArrastando] = useState(null);
   const [colunaAlvo, setColunaAlvo] = useState(null);
-  const [dialogo, setDialogo] = useState(null); // { modo: 'novo' | 'editar', dados, modelo }
+  const [dialogo, setDialogo] = useState(null); // { modo: 'novo' | 'editar', dados }
 
   // Projeto aberto e modo de visualização ficam no endereço (?projeto=id&ver=lista)
   const [params, setParams] = useSearchParams();
@@ -105,16 +103,12 @@ export default function ProjetosPage() {
     );
 
   const novo = (status) => {
-    const modelo = MODELOS[0];
-    setDialogo({ modo: 'novo', modelo: modelo.id, dados: { ...PROJETO_VAZIO, status: status || 'planejando', dataInicio: hojeIso() } });
+    setDialogo({ modo: 'novo', dados: { ...PROJETO_VAZIO, status: status || 'planejando', dataInicio: hojeIso() } });
   };
-
-  const escolherModelo = (m) =>
-    setDialogo((d) => ({ ...d, modelo: m.id, dados: { ...d.dados, area: m.area === 'Outro' ? d.dados.area : m.area } }));
 
   const salvarDialogo = async (e) => {
     e.preventDefault();
-    const { modo, dados, modelo } = dialogo;
+    const { modo, dados } = dialogo;
     if (!dados.nome.trim()) return;
     const campos = {
       nome: dados.nome.trim(),
@@ -133,7 +127,7 @@ export default function ProjetosPage() {
         const ref = await addDoc(collection(db, COL.projetos), {
           ...PROJETO_VAZIO,
           ...campos,
-          etapas: etapasDoModelo(modelo),
+          etapas: [],
           userId: user.uid,
           createdAt: Date.now(),
           atualizadoEm: Date.now(),
@@ -309,7 +303,7 @@ export default function ProjetosPage() {
                 <EmptyState
                   icon={FolderKanban}
                   title="Nenhum projeto ainda"
-                  description="Pode ser um app, o TCC, uma reforma, uma viagem ou um negócio. Comece por um modelo e ele já vem com as etapas."
+                  description="Pode ser um app, o TCC, uma reforma, uma viagem ou um negócio."
                   action={
                     <Button onClick={() => novo()}>
                       <Plus /> Criar o primeiro projeto
@@ -403,8 +397,6 @@ export default function ProjetosPage() {
           <ProjectForm
             id="projeto-form"
             criando={dialogo.modo === 'novo'}
-            modelo={dialogo.modelo}
-            onModelo={escolherModelo}
             value={dialogo.dados}
             onChange={(dados) => setDialogo((d) => ({ ...d, dados }))}
             onSubmit={salvarDialogo}
