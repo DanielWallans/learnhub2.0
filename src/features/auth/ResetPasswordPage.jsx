@@ -35,9 +35,15 @@ function ResetPassword() {
     setErro("");
     if (senha.length < 6) return setErro("A senha precisa ter pelo menos 6 caracteres.");
     if (senha !== confirmar) return setErro("As senhas não são iguais.");
-    if (!auth.currentUser) return setErro("O link expirou ou já foi usado. Peça um novo.");
     setLoading(true);
     try {
+      if (!auth.currentUser && tokensDoLink.token_hash) {
+        const { error } = await supabase.auth.verifyOtp({ token_hash: tokensDoLink.token_hash, type: "recovery" });
+        if (error) throw Object.assign(new Error(error.message), { code: "auth/link-expirado" });
+      }
+      if (!(await supabase.auth.getSession()).data.session) {
+        throw Object.assign(new Error("sem sessão"), { code: "auth/link-expirado" });
+      }
       await updatePassword(senha);
       setPronto(true);
       setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
@@ -45,6 +51,7 @@ function ResetPassword() {
       const mensagens = {
         "auth/weak-password": "Senha muito fraca.",
         "auth/same-password": "A senha nova precisa ser diferente da atual.",
+        "auth/link-expirado": "O link expirou ou já foi usado. Peça um novo.",
       };
       setErro(mensagens[error.code] || "Não deu para salvar a senha. Peça um novo link.");
     } finally {
